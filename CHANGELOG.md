@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.1 - 2026-06-15
+
+- Captured fresh dashboard screenshots (Live, Strategies, Backtests) from the running app and embedded them in the README.
+- Hardened the Live page against summary payloads without a metrics object.
+
 ## 0.2.0 - 2026-06-15
 
 - Implemented the real first strategy, `ema_ribbon_reversal`, encoded faithfully from the source YouTube video transcript (EMA 5/100/200 ribbon reversal with 2:1 reward:risk). Replaced the transcript-gated placeholder.

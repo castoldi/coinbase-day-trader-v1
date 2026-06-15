@@ -150,8 +150,8 @@ function LiveTradingPage({
     ["Realized PnL", formatCurrency(summary?.account.realized_pnl_usd ?? 0), "Closed trade performance"],
     [
       "Win Rate",
-      `${(summary?.metrics.win_rate_pct ?? 0).toFixed(0)}%`,
-      `${summary?.metrics.closed_count ?? 0} closed trades`,
+      `${(summary?.metrics?.win_rate_pct ?? 0).toFixed(0)}%`,
+      `${summary?.metrics?.closed_count ?? 0} closed trades`,
     ],
   ] as const;
 

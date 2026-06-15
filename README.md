@@ -36,7 +36,17 @@ The bot starts from 1000 USD paper cash. If equity falls to 500 USD or below, tr
 
 ## Dashboard
 
+Live trading control room with account metrics, current coin prices, and open/closed trade tables:
+
 ![Live trading dashboard](screenshots/dashboard-live.png)
+
+Strategy page with annotated candlestick examples (entry, stop-loss, take-profit) for the long and short setups:
+
+![Strategy page](screenshots/dashboard-strategies.png)
+
+Backtests page summarizing every standard period:
+
+![Backtests page](screenshots/dashboard-backtests.png)
 
 Run locally:
 

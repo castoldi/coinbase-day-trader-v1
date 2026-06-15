@@ -42,3 +42,13 @@ class Trade(Base):
     realized_pnl_usd: Mapped[float] = mapped_column(Float, default=0, nullable=False)
     opened_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
     closed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+
+class BotStatus(Base):
+    __tablename__ = "bot_status"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    status: Mapped[str] = mapped_column(String, nullable=False)
+    strategies: Mapped[str] = mapped_column(String, nullable=False)
+    last_heartbeat_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, onupdate=utc_now)

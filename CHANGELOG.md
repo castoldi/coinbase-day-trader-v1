@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.3 - 2026-06-15
+
+- Fixed dashboard menu buttons so they switch between Live Trading, Trading History, Account Management, Backtests, and Strategies.
+- Added visible placeholder content for pages whose backend data is not implemented yet.
+- Added Backtests page standard periods: 2024, 2025, 2026, and Last 30 days.
+- Added dashboard interaction tests for menu clicks and Backtests page content.
+
 ## 0.1.2 - 2026-06-15
 
 - Changed the dashboard development host to `0.0.0.0` so it can be reached from the local network at URLs such as `http://192.168.0.191:8011/`.

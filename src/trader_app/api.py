@@ -15,7 +15,7 @@ def create_app(session_factory: sessionmaker[Session] | None = None) -> FastAPI:
         initialize_database(engine)
 
     account_service = AccountService(session_factory)
-    app = FastAPI(title="Coinbase Day Trader API", version="0.1.2")
+    app = FastAPI(title="Coinbase Day Trader API", version="0.1.3")
 
     @app.get("/api/health")
     def health() -> dict[str, str]:

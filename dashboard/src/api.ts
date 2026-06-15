@@ -48,6 +48,7 @@ export type BacktestRunSummary = {
   id: number;
   strategy_name: string;
   strategy_version: string;
+  granularity: string | null;
   period_name: string;
   product_id: string | null;
   product_ids: string[];

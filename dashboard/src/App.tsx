@@ -312,15 +312,16 @@ function BacktestsPage({
           {error
             ? error
             : runs.length
-              ? `${breakdown.coins.length} coins × ${breakdown.periods.length} periods × ${breakdown.strategies.length} strategies. Each cell is that strategy's return on that coin and period.`
+              ? `${breakdown.coins.length} coins × ${breakdown.granularities.length} timeframes × ${breakdown.strategies.length} strategies. Each cell is that strategy's return on that coin, timeframe, and period.`
               : loading
                 ? "Loading backtest runs."
                 : "No backtest runs recorded yet."}
         </p>
         {runs.length ? (
           <p className="inlineNote">
-            Each backtest starts with $1,000 per coin. Cells show return with trades · win rate.
-            "Buy &amp; Hold" is the coin's market move over the window (strategy-independent).
+            Each backtest starts with $1,000 per coin and is net of trading fees. Cells show return
+            with trades · win rate. "Buy &amp; Hold" is the coin's market move over the window
+            (strategy-independent).
           </p>
         ) : null}
       </article>
@@ -342,48 +343,51 @@ function CoinBreakdownSection({
     <article className="tableSurface">
       <div className="sectionHeader">
         <h2>{coin.product_id}</h2>
-        <span>$1,000 per backtest</span>
+        <span>$1,000 per backtest · net of fees</span>
       </div>
-      <div className="tableWrap">
-        <table className="dataTable">
-          <thead>
-            <tr>
-              <th>Period</th>
-              {strategies.map((strategy) => (
-                <th key={strategy.key}>{strategy.name}</th>
-              ))}
-              <th>Buy &amp; Hold</th>
-            </tr>
-          </thead>
-          <tbody>
-            {coin.rows.map((row) => (
-              <tr key={row.period}>
-                <td>{formatPeriodName(row.period)}</td>
-                {strategies.map((strategy) => {
-                  const run = row.cells[strategy.key];
-                  if (!run) {
-                    return (
-                      <td key={strategy.key}>—</td>
-                    );
-                  }
-                  return (
-                    <td key={strategy.key}>
-                      <span className={run.total_return_pct >= 0 ? "pnlUp" : "pnlDown"}>
-                        {formatPercent(run.total_return_pct)}
-                      </span>
-                      <span className="cellSub">
-                        {run.trade_count} {run.trade_count === 1 ? "trade" : "trades"}
-                        {run.trade_count > 0 ? ` · ${Math.round(run.win_rate_pct)}% win` : ""}
-                      </span>
-                    </td>
-                  );
-                })}
-                <td>{formatPercent(row.market_return_pct)}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      {coin.granularities.map((gran) => (
+        <div key={gran.granularity} className="granularityBlock">
+          <h3 className="granularityHeading">{formatGranularity(gran.granularity)}</h3>
+          <div className="tableWrap">
+            <table className="dataTable">
+              <thead>
+                <tr>
+                  <th>Period</th>
+                  {strategies.map((strategy) => (
+                    <th key={strategy.key}>{strategy.name}</th>
+                  ))}
+                  <th>Buy &amp; Hold</th>
+                </tr>
+              </thead>
+              <tbody>
+                {gran.rows.map((row) => (
+                  <tr key={row.period}>
+                    <td>{formatPeriodName(row.period)}</td>
+                    {strategies.map((strategy) => {
+                      const run = row.cells[strategy.key];
+                      if (!run) {
+                        return <td key={strategy.key}>—</td>;
+                      }
+                      return (
+                        <td key={strategy.key}>
+                          <span className={run.total_return_pct >= 0 ? "pnlUp" : "pnlDown"}>
+                            {formatPercent(run.total_return_pct)}
+                          </span>
+                          <span className="cellSub">
+                            {run.trade_count} {run.trade_count === 1 ? "trade" : "trades"}
+                            {run.trade_count > 0 ? ` · ${Math.round(run.win_rate_pct)}% win` : ""}
+                          </span>
+                        </td>
+                      );
+                    })}
+                    <td>{formatPercent(row.market_return_pct)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      ))}
     </article>
   );
 }
@@ -619,5 +623,22 @@ function formatPercent(value: number) {
 }
 
 function formatPeriodName(period: string) {
-  return period === "last_30_days" ? "Last 30 Days" : period;
+  const recent = period.match(/^last_(\d+)_days$/);
+  if (recent) {
+    return `Last ${recent[1]} Days`;
+  }
+  return period;
+}
+
+const GRANULARITY_LABELS: Record<string, string> = {
+  ONE_MINUTE: "1-minute candles",
+  FIVE_MINUTE: "5-minute candles",
+  FIFTEEN_MINUTE: "15-minute candles",
+  ONE_HOUR: "1-hour candles",
+  SIX_HOUR: "6-hour candles",
+  ONE_DAY: "Daily candles",
+};
+
+function formatGranularity(granularity: string) {
+  return GRANULARITY_LABELS[granularity] ?? granularity;
 }

@@ -107,6 +107,7 @@ function strategiesPayload() {
 
 function backtestsPayload() {
   const base = {
+    granularity: "ONE_DAY",
     period_name: "2024",
     product_ids: ["BTC-USD", "ETH-USD", "SOL-USD"],
     start_date: "2024-01-01",

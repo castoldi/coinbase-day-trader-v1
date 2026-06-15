@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.8.0 - 2026-06-15
+
+- **Multi-timeframe backtests.** The standard sweep now runs across multiple candle granularities side-by-side (`BACKTEST_GRANULARITIES`, default `ONE_DAY,ONE_HOUR,FIVE_MINUTE`), so you can compare how each strategy performs per coin at each timeframe. Added a `granularity` column to backtest runs.
+- **Timeframe-aware periods.** Daily backtests keep calendar-year + last-30-day windows; intraday granularities use shorter rolling windows (e.g. 1-hour → last 90/30/7 days, 5-minute → last 30/7/3 days) to keep candle volume manageable and relevant to day trading.
+- **Backtests page** now groups each coin's matrix by timeframe (Daily / 1-hour / 5-minute …), each with its own period rows × strategy columns, all net of fees.
+
+## 0.7.0 - 2026-06-15
+
+- **Backtest fee model.** Backtests now apply a configurable per-side trading fee (`BACKTEST_FEE_RATE`, default 0.6%) on both entry and exit, so returns/PnL are net of fees. At intraday frequencies fees dominate, so results are no longer optimistically fee-free.
+- **Configurable candle granularity.** Added `BACKTEST_GRANULARITY` (e.g. `ONE_DAY`, `ONE_HOUR`, `FIVE_MINUTE`, `ONE_MINUTE`). The Coinbase candle loader and cache now work at any granularity (cache files are suffixed per granularity, e.g. `BTC-USD-FIVE_MINUTE.json`), and the simulator iterates every candle in chronological order instead of collapsing to one bar per calendar day — enabling intraday day-trading frequencies (multiple trades per day).
+
 ## 0.6.0 - 2026-06-15
 
 - Reworked the Backtests page into a per-coin breakdown matrix: one section per coin, rows = periods, columns = strategies (each cell shows return with trades · win rate), plus a per-coin Buy & Hold column — so you can compare strategies coin-by-coin and period-by-period. Replaced the combined all-coins summary.

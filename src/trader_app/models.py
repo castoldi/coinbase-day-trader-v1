@@ -62,6 +62,9 @@ class BacktestRun(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     strategy_name: Mapped[str] = mapped_column(String, nullable=False)
     strategy_version: Mapped[str] = mapped_column(String, nullable=False)
+    # Candle granularity for this run (e.g. ONE_DAY, ONE_HOUR, FIVE_MINUTE).
+    # Nullable so existing local databases can be migrated in place.
+    granularity: Mapped[str | None] = mapped_column(String, nullable=True)
     period_name: Mapped[str] = mapped_column(String, nullable=False)
     product_id: Mapped[str | None] = mapped_column(String, nullable=True)
     product_ids: Mapped[str] = mapped_column(String, nullable=False)

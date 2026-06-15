@@ -12,7 +12,11 @@ def make_service(tmp_path, candle_loader, strategies=None):
     initialize_database(engine)
     settings = Settings(_env_file=None)  # default products: BTC-USD, ETH-USD, SOL-USD
     return BacktestService(
-        session_factory, settings, candle_loader=candle_loader, strategies=strategies
+        session_factory,
+        settings,
+        candle_loader=candle_loader,
+        strategies=strategies,
+        granularity="ONE_DAY",
     )
 
 
@@ -80,3 +84,28 @@ def test_summary_exposes_product_id(tmp_path):
     assert summary["total_runs"] == 12
     assert all("product_id" in run for run in summary["runs"])
     assert summary["runs"][0]["strategy_name"] == "ema_ribbon_reversal"
+
+
+def test_sweep_covers_each_configured_granularity(tmp_path):
+    db_url = f"sqlite:///{tmp_path / 'multi.sqlite3'}"
+    engine, session_factory = create_session_factory(db_url)
+    initialize_database(engine)
+    settings = Settings(_env_file=None)
+    service = BacktestService(
+        session_factory,
+        settings,
+        candle_loader=loader_with_signals_only_on_btc(),
+        strategies=[small_strategy()],
+        granularities=["ONE_DAY", "ONE_HOUR"],
+    )
+    runs = service.run_standard_backtests(today=date(2026, 6, 15))
+
+    by_gran = {g: [r for r in runs if r.granularity == g] for g in ("ONE_DAY", "ONE_HOUR")}
+    # ONE_DAY: 4 periods x 3 coins; ONE_HOUR: 3 recent windows x 3 coins.
+    assert len(by_gran["ONE_DAY"]) == 12
+    assert len(by_gran["ONE_HOUR"]) == 9
+    assert {r.granularity for r in runs} == {"ONE_DAY", "ONE_HOUR"}
+
+    summary = service.get_backtests_summary()
+    assert summary["total_runs"] == 21
+    assert all(run["granularity"] in ("ONE_DAY", "ONE_HOUR") for run in summary["runs"])

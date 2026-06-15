@@ -23,8 +23,6 @@ const navItems = [
   ["Strategies", BookOpen],
 ] as const;
 
-const backtestPeriods = ["2024", "2025", "2026", "last_30_days"] as const;
-
 const APP_VERSION = typeof __APP_VERSION__ !== "undefined" ? __APP_VERSION__ : "dev";
 
 const POLL_INTERVAL_MS = 10000;
@@ -338,7 +336,7 @@ function BacktestsPage({
         ) : null}
       </article>
       {groups.map((group) => (
-        <BacktestStrategySection key={group.key} group={group} loading={loading} />
+        <BacktestStrategySection key={group.key} group={group} />
       ))}
     </section>
   );
@@ -346,39 +344,28 @@ function BacktestsPage({
 
 function BacktestStrategySection({
   group,
-  loading,
 }: {
   group: { key: string; name: string; version: string; runs: BacktestsSummary["runs"] };
-  loading: boolean;
 }) {
-  const runsByPeriod = new Map(group.runs.map((run) => [run.period_name, run]));
+  const coins = [...new Set(group.runs.map((run) => run.product_id ?? "—"))];
   return (
     <article className="tableSurface">
       <div className="sectionHeader">
         <h2>
           {group.name} {group.version}
         </h2>
-        <span>Stored in local database</span>
+        <span>{coins.length} coins · $1,000 each</span>
       </div>
       <p>
-        Recorded {group.runs.length} run{group.runs.length === 1 ? "" : "s"} for {group.name} {group.version}.
+        Recorded {group.runs.length} run{group.runs.length === 1 ? "" : "s"} for {group.name} {group.version}{" "}
+        — one per period per coin.
       </p>
-      <ul className="coinList">
-        {backtestPeriods.map((period) => {
-          const run = runsByPeriod.get(period);
-          return (
-            <li key={period}>
-              <span>{formatPeriodName(period)}</span>
-              <strong>{run ? `${run.trade_count} trades` : loading ? "Loading" : "Pending"}</strong>
-            </li>
-          );
-        })}
-      </ul>
       <div className="tableWrap">
         <table className="dataTable">
           <thead>
             <tr>
               <th>Period</th>
+              <th>Coin</th>
               <th>Window</th>
               <th>Trades</th>
               <th>Win Rate</th>
@@ -389,15 +376,18 @@ function BacktestStrategySection({
           </thead>
           <tbody>
             {group.runs.map((run) => (
-              <tr key={`${run.period_name}-${run.id}`}>
+              <tr key={`${run.period_name}-${run.product_id ?? run.id}`}>
                 <td>{formatPeriodName(run.period_name)}</td>
+                <td>{run.product_id ?? "—"}</td>
                 <td>
                   {run.start_date} to {run.end_date}
                 </td>
                 <td>{run.trade_count}</td>
                 <td>{formatPercent(run.win_rate_pct)}</td>
                 <td>{formatCurrency(run.ending_equity_usd)}</td>
-                <td>{formatPercent(run.total_return_pct)}</td>
+                <td className={run.total_return_pct >= 0 ? "pnlUp" : "pnlDown"}>
+                  {formatPercent(run.total_return_pct)}
+                </td>
                 <td>{formatPercent(run.market_return_pct)}</td>
               </tr>
             ))}

@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.5.0 - 2026-06-15
+
+- Backtests now run **per coin** (per strategy, per period, per coin), each coin starting with $1000, so you can see how each strategy performed on each coin (BTC/ETH/SOL) in each period instead of a blended portfolio number.
+- Added a `product_id` column to backtest runs and a "Coin" column to the Backtests table; the Buy & Hold benchmark is now per coin.
+
 ## 0.4.4 - 2026-06-15
 
 - Renamed the Backtests "Market" column to "Buy & Hold" and added a note clarifying it is the market benchmark (identical for every strategy), not the strategy's own result.

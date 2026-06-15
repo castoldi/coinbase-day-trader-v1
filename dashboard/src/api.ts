@@ -49,6 +49,7 @@ export type BacktestRunSummary = {
   strategy_name: string;
   strategy_version: string;
   period_name: string;
+  product_id: string | null;
   product_ids: string[];
   start_date: string;
   end_date: string;

@@ -51,10 +51,11 @@ class BacktestService:
             session.execute(delete(BacktestRun))
             for period in standard_periods(today):
                 for strategy in strategies:
-                    run = self._build_run(strategy, period, products)
-                    session.add(run)
-                    session.flush()
-                    runs.append(run)
+                    for product_id in products:
+                        run = self._build_run(strategy, period, product_id)
+                        session.add(run)
+                        session.flush()
+                        runs.append(run)
             session.commit()
 
         return runs
@@ -62,7 +63,11 @@ class BacktestService:
     def get_backtests_summary(self) -> dict[str, object]:
         with self.session_factory() as session:
             runs = session.scalars(
-                select(BacktestRun).order_by(BacktestRun.start_date.asc(), BacktestRun.period_name.asc())
+                select(BacktestRun).order_by(
+                    BacktestRun.start_date.asc(),
+                    BacktestRun.period_name.asc(),
+                    BacktestRun.product_id.asc(),
+                )
             ).all()
 
         return {
@@ -75,24 +80,21 @@ class BacktestService:
         self,
         strategy,
         period: BacktestPeriod,
-        products: list[str],
+        product_id: str,
     ) -> BacktestRun:
-        series: dict[str, list[CandlePoint]] = {}
-        market_returns: list[float] = []
-        for product_id in products:
-            candles = self.candle_loader(product_id, period.start, period.end)
-            series[product_id] = candles
-            if len(candles) >= 2 and candles[0].close:
-                market_returns.append(((candles[-1].close - candles[0].close) / candles[0].close) * 100)
+        candles = self.candle_loader(product_id, period.start, period.end)
+        if len(candles) >= 2 and candles[0].close:
+            market_return_pct = ((candles[-1].close - candles[0].close) / candles[0].close) * 100
+        else:
+            market_return_pct = 0.0
 
-        market_return_pct = sum(market_returns) / len(market_returns) if market_returns else 0.0
-        result = self._simulate(strategy, period, products, series)
+        result = self._simulate(strategy, period, [product_id], {product_id: candles})
 
         if result["trade_count"] == 0:
-            notes = "No qualifying reversal setups in this period; account stayed flat."
+            notes = f"No qualifying setups for {product_id} in this period; account stayed flat."
         else:
             notes = (
-                f"Executed {result['trade_count']} trade(s) with a "
+                f"{product_id}: executed {result['trade_count']} trade(s) with a "
                 f"{result['win_rate_pct']:.1f}% win rate."
             )
 
@@ -100,7 +102,8 @@ class BacktestService:
             strategy_name=strategy.name,
             strategy_version=strategy.version,
             period_name=period.name,
-            product_ids=",".join(products),
+            product_id=product_id,
+            product_ids=product_id,
             start_date=period.start.isoformat(),
             end_date=period.end.isoformat(),
             starting_cash_usd=period.starting_cash_usd,
@@ -327,6 +330,7 @@ class BacktestService:
             "strategy_name": run.strategy_name,
             "strategy_version": run.strategy_version,
             "period_name": run.period_name,
+            "product_id": run.product_id,
             "product_ids": run.product_ids.split(","),
             "start_date": run.start_date,
             "end_date": run.end_date,

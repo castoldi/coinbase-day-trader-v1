@@ -130,6 +130,7 @@ function backtestsPayload() {
         id: 1,
         strategy_name: "ema_ribbon_reversal",
         strategy_version: "1.0.0",
+        product_id: "BTC-USD",
         notes: "EMA executed 12 trades.",
       },
       {
@@ -137,6 +138,7 @@ function backtestsPayload() {
         id: 2,
         strategy_name: "stochastic_swing",
         strategy_version: "1.0.0",
+        product_id: "ETH-USD",
         trade_count: 21,
         notes: "Stochastic executed 21 trades.",
       },
@@ -228,9 +230,12 @@ describe("App", () => {
       expect(screen.getByRole("heading", { name: "ema_ribbon_reversal 1.0.0" })).toBeTruthy(),
     );
     expect(screen.getByRole("heading", { name: "stochastic_swing 1.0.0" })).toBeTruthy();
-    expect(screen.getByText("Recorded 1 run for ema_ribbon_reversal 1.0.0.")).toBeTruthy();
-    expect(screen.getByText("Recorded 1 run for stochastic_swing 1.0.0.")).toBeTruthy();
+    expect(screen.getByText(/Recorded 1 run for ema_ribbon_reversal 1\.0\.0/)).toBeTruthy();
+    expect(screen.getByText(/Recorded 1 run for stochastic_swing 1\.0\.0/)).toBeTruthy();
     expect(screen.getAllByText("2024").length).toBeGreaterThan(0);
+    // each strategy section shows the coin that was traded
+    expect(screen.getByText("BTC-USD")).toBeTruthy();
+    expect(screen.getByText("ETH-USD")).toBeTruthy();
   });
 
   it("describes each strategy with its own chart examples and backtest note", async () => {

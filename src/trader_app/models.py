@@ -63,6 +63,7 @@ class BacktestRun(Base):
     strategy_name: Mapped[str] = mapped_column(String, nullable=False)
     strategy_version: Mapped[str] = mapped_column(String, nullable=False)
     period_name: Mapped[str] = mapped_column(String, nullable=False)
+    product_id: Mapped[str | None] = mapped_column(String, nullable=True)
     product_ids: Mapped[str] = mapped_column(String, nullable=False)
     start_date: Mapped[str] = mapped_column(String, nullable=False)
     end_date: Mapped[str] = mapped_column(String, nullable=False)

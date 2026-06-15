@@ -1,0 +1,27 @@
+{
+  "name": "coinbase-day-trader-dashboard",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1 --port 5173",
+    "build": "tsc && vite build",
+    "test": "vitest --environment jsdom"
+  },
+  "dependencies": {
+    "@vitejs/plugin-react": "^6.0.2",
+    "vite": "^8.0.16",
+    "typescript": "^5.5.4",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "lucide-react": "^0.468.0"
+  },
+  "devDependencies": {
+    "@testing-library/react": "^16.0.1",
+    "@testing-library/jest-dom": "^6.4.8",
+    "@types/react": "^18.3.4",
+    "@types/react-dom": "^18.3.0",
+    "jsdom": "^29.1.1",
+    "vitest": "^4.1.8"
+  }
+}

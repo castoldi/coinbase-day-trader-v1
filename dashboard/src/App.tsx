@@ -1,0 +1,76 @@
+import React from "react";
+import { Activity, BarChart3, BookOpen, History, Landmark } from "lucide-react";
+
+const navItems = [
+  ["Live Trading", Activity],
+  ["Trading History", History],
+  ["Account Management", Landmark],
+  ["Backtests", BarChart3],
+  ["Strategies", BookOpen],
+] as const;
+
+const metrics = [
+  ["Equity", "$1,000.00", "Starting paper capital"],
+  ["Cash", "$1,000.00", "Available to deploy"],
+  ["PnL", "$0.00", "Realized"],
+  ["Win Rate", "0%", "No closed trades"],
+] as const;
+
+export default function App() {
+  return (
+    <main className="appShell">
+      <aside className="sidebar">
+        <div className="brand">
+          <span className="brandMark">CB</span>
+          <span>Coinbase Day Trader</span>
+        </div>
+        <nav aria-label="Dashboard">
+          {navItems.map(([label, Icon]) => (
+            <button className="navButton" key={label} type="button" title={label}>
+              <Icon size={18} />
+              <span>{label}</span>
+            </button>
+          ))}
+        </nav>
+      </aside>
+      <section className="workspace">
+        <header className="topbar">
+          <div>
+            <p className="eyebrow">Paper trading control room</p>
+            <h1>Live Trading</h1>
+          </div>
+          <span className="statusPill">Local mode</span>
+        </header>
+        <section className="metricGrid" aria-label="Trading metrics">
+          {metrics.map(([label, value, note]) => (
+            <article key={label}>
+              <span>{label}</span>
+              <strong>{value}</strong>
+              <small>{note}</small>
+            </article>
+          ))}
+        </section>
+        <section className="tradeLayout">
+          <article className="tableSurface">
+            <div className="sectionHeader">
+              <h2>Open Trades</h2>
+              <span>0 active</span>
+            </div>
+            <p>No open trades.</p>
+          </article>
+          <article className="tableSurface">
+            <div className="sectionHeader">
+              <h2>Coins Trading</h2>
+              <span>Watchlist</span>
+            </div>
+            <ul className="coinList">
+              <li><span>BTC-USD</span><strong>Ready</strong></li>
+              <li><span>ETH-USD</span><strong>Ready</strong></li>
+              <li><span>SOL-USD</span><strong>Ready</strong></li>
+            </ul>
+          </article>
+        </section>
+      </section>
+    </main>
+  );
+}

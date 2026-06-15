@@ -18,6 +18,13 @@ def test_health_endpoint(tmp_path):
     assert response.json()["status"] == "ok"
 
 
+def test_api_responses_are_not_cacheable(tmp_path):
+    client = make_client(tmp_path)
+    for path in ["/api/dashboard/summary", "/api/backtests/summary", "/api/strategies"]:
+        response = client.get(path)
+        assert response.headers.get("cache-control") == "no-store", path
+
+
 def test_dashboard_summary_shape(tmp_path):
     client = make_client(tmp_path)
     response = client.get("/api/dashboard/summary")

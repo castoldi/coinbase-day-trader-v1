@@ -106,7 +106,8 @@ export type StrategiesResponse = {
 };
 
 async function getJson<T>(url: string, errorMessage: string): Promise<T> {
-  const response = await fetch(url);
+  // never serve a cached API response, so the dashboard always shows live data
+  const response = await fetch(url, { cache: "no-store" });
   if (!response.ok) {
     throw new Error(errorMessage);
   }

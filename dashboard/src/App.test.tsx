@@ -192,6 +192,18 @@ describe("App", () => {
     expect(screen.getByText("Safety lock")).toBeTruthy();
   });
 
+  it("refetches backtests when navigating to the Backtests tab", async () => {
+    mockFetch();
+    render(<App />);
+    const fetchMock = globalThis.fetch as unknown as ReturnType<typeof vi.fn>;
+    const callsTo = (url: string) =>
+      fetchMock.mock.calls.filter((call) => call[0] === url).length;
+    await waitFor(() => expect(callsTo("/api/backtests/summary")).toBeGreaterThan(0));
+    const before = callsTo("/api/backtests/summary");
+    fireEvent.click(screen.getByRole("button", { name: "Backtests" }));
+    await waitFor(() => expect(callsTo("/api/backtests/summary")).toBeGreaterThan(before));
+  });
+
   it("shows a separate backtest section per strategy", async () => {
     mockFetch();
     render(<App />);

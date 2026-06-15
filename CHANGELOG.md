@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.4.2 - 2026-06-15
+
+- Fixed stale backtest data caused by cached API responses: the API now sends `Cache-Control: no-store`, the dashboard fetches with `cache: "no-store"`, and the dashboard refetches whenever you switch tabs (so each navigation makes a live request).
+
 ## 0.4.1 - 2026-06-15
 
 - Stopped the dev server from letting the browser cache assets (`Cache-Control: no-store`) so a refresh always shows the latest dashboard.

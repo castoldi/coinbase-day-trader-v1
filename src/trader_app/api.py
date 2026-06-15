@@ -45,6 +45,12 @@ def create_app(
     load_prices = price_loader or _cached_prices
     app = FastAPI(title="Coinbase Day Trader API", version="0.2.0")
 
+    @app.middleware("http")
+    async def no_store(request, call_next):
+        response = await call_next(request)
+        response.headers["Cache-Control"] = "no-store"
+        return response
+
     @app.get("/api/health")
     def health() -> dict[str, str]:
         return {"status": "ok"}

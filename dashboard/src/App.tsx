@@ -75,7 +75,8 @@ export default function App() {
     return () => {
       alive = false;
     };
-  }, []);
+    // refetch on every navigation so each tab always shows live data
+  }, [activePage]);
 
   return (
     <main className="appShell">

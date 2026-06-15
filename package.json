@@ -1,0 +1,10 @@
+{
+  "name": "coinbase-day-trader-v1",
+  "private": true,
+  "version": "0.1.0",
+  "scripts": {
+    "dashboard:install": "npm --prefix dashboard install",
+    "dashboard:dev": "npm --prefix dashboard run dev",
+    "dashboard:test": "npm --prefix dashboard test"
+  }
+}

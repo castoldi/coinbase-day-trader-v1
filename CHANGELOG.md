@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.6.0 - 2026-06-15
+
+- Reworked the Backtests page into a per-coin breakdown matrix: one section per coin, rows = periods, columns = strategies (each cell shows return with trades · win rate), plus a per-coin Buy & Hold column — so you can compare strategies coin-by-coin and period-by-period. Replaced the combined all-coins summary.
+
 ## 0.5.1 - 2026-06-15
 
 - Added a "Combined — all coins" summary table per strategy on the Backtests page (per period: total trades, trade-weighted win rate, combined equity, return, average Buy & Hold), keeping the per-coin detail below it.

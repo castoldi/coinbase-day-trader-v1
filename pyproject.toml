@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "coinbase-day-trader-v1"
-version = "0.5.1"
+version = "0.6.0"
 description = "Local-first Coinbase crypto paper trading bot and dashboard."
 requires-python = ">=3.11"
 dependencies = [

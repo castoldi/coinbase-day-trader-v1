@@ -76,7 +76,7 @@ Select strategies at startup with `--strategies` (a single name, a comma-separat
 
 ## Backtests
 
-Standard periods are 2024, 2025, 2026, and the last 30 days. Backtests run **per strategy, per period, per coin** (BTC-USD, ETH-USD, SOL-USD) — each coin starts with 1000 USD paper cash — so you can see exactly how each strategy performed on each coin in each period. Every run records trade count, win rate, ending equity, total return, max drawdown, and a per-coin Buy & Hold benchmark. Daily market data is downloaded from the Coinbase public API and cached under `data/market/` for reuse.
+Standard periods are 2024, 2025, 2026, and the last 30 days. Backtests run **per strategy, per period, per coin** (BTC-USD, ETH-USD, SOL-USD) — each coin starts with 1000 USD paper cash — so you can see exactly how each strategy performed on each coin in each period. Every run records trade count, win rate, ending equity, total return, max drawdown, and a per-coin Buy & Hold benchmark. The dashboard presents this as a per-coin matrix (rows = periods, columns = strategies) so you can compare strategies coin-by-coin. Daily market data is downloaded from the Coinbase public API and cached under `data/market/` for reuse.
 
 Run all standard backtests:
 

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Activity, BarChart3, BookOpen, History, Landmark } from "lucide-react";
-import { aggregateRunsByPeriod } from "./aggregate";
+import { buildCoinBreakdown } from "./breakdown";
 import {
   fetchBacktestsSummary,
   fetchDashboardSummary,
@@ -299,18 +299,7 @@ function BacktestsPage({
   error: string;
 }) {
   const runs = summary?.runs ?? [];
-  const groups: { key: string; name: string; version: string; runs: BacktestsSummary["runs"] }[] = [];
-  const index = new Map<string, (typeof groups)[number]>();
-  for (const run of runs) {
-    const key = `${run.strategy_name} ${run.strategy_version}`;
-    let group = index.get(key);
-    if (!group) {
-      group = { key, name: run.strategy_name, version: run.strategy_version, runs: [] };
-      index.set(key, group);
-      groups.push(group);
-    }
-    group.runs.push(run);
-  }
+  const breakdown = buildCoinBreakdown(runs);
 
   return (
     <section className="pageStack">
@@ -323,102 +312,73 @@ function BacktestsPage({
           {error
             ? error
             : runs.length
-              ? `Recorded ${runs.length} backtest run${runs.length === 1 ? "" : "s"} across ${groups.length} strateg${groups.length === 1 ? "y" : "ies"}.`
+              ? `${breakdown.coins.length} coins × ${breakdown.periods.length} periods × ${breakdown.strategies.length} strategies. Each cell is that strategy's return on that coin and period.`
               : loading
                 ? "Loading backtest runs."
                 : "No backtest runs recorded yet."}
         </p>
         {runs.length ? (
           <p className="inlineNote">
-            "Buy &amp; Hold" is the benchmark return of the coins over each window and is the same for
-            every strategy. Each strategy's own result is in the Trades, Win Rate, Equity, and Return
-            columns.
+            Each backtest starts with $1,000 per coin. Cells show return with trades · win rate.
+            "Buy &amp; Hold" is the coin's market move over the window (strategy-independent).
           </p>
         ) : null}
       </article>
-      {groups.map((group) => (
-        <BacktestStrategySection key={group.key} group={group} />
+      {breakdown.coins.map((coin) => (
+        <CoinBreakdownSection key={coin.product_id} coin={coin} strategies={breakdown.strategies} />
       ))}
     </section>
   );
 }
 
-function BacktestStrategySection({
-  group,
+function CoinBreakdownSection({
+  coin,
+  strategies,
 }: {
-  group: { key: string; name: string; version: string; runs: BacktestsSummary["runs"] };
+  coin: ReturnType<typeof buildCoinBreakdown>["coins"][number];
+  strategies: ReturnType<typeof buildCoinBreakdown>["strategies"];
 }) {
-  const coins = [...new Set(group.runs.map((run) => run.product_id ?? "—"))];
-  const combined = aggregateRunsByPeriod(group.runs);
   return (
     <article className="tableSurface">
       <div className="sectionHeader">
-        <h2>
-          {group.name} {group.version}
-        </h2>
-        <span>{coins.length} coins · $1,000 each</span>
+        <h2>{coin.product_id}</h2>
+        <span>$1,000 per backtest</span>
       </div>
-
-      <h3 className="subHeading">Combined — all coins</h3>
       <div className="tableWrap">
         <table className="dataTable">
           <thead>
             <tr>
               <th>Period</th>
-              <th>Trades</th>
-              <th>Win Rate</th>
-              <th>Equity</th>
-              <th>Return</th>
+              {strategies.map((strategy) => (
+                <th key={strategy.key}>{strategy.name}</th>
+              ))}
               <th>Buy &amp; Hold</th>
             </tr>
           </thead>
           <tbody>
-            {combined.map((row) => (
-              <tr key={`combined-${row.period_name}`}>
-                <td>{formatPeriodName(row.period_name)}</td>
-                <td>{row.trade_count}</td>
-                <td>{formatPercent(row.win_rate_pct)}</td>
-                <td>{formatCurrency(row.ending_equity_usd)}</td>
-                <td className={row.total_return_pct >= 0 ? "pnlUp" : "pnlDown"}>
-                  {formatPercent(row.total_return_pct)}
-                </td>
+            {coin.rows.map((row) => (
+              <tr key={row.period}>
+                <td>{formatPeriodName(row.period)}</td>
+                {strategies.map((strategy) => {
+                  const run = row.cells[strategy.key];
+                  if (!run) {
+                    return (
+                      <td key={strategy.key}>—</td>
+                    );
+                  }
+                  return (
+                    <td key={strategy.key}>
+                      <span className={run.total_return_pct >= 0 ? "pnlUp" : "pnlDown"}>
+                        {formatPercent(run.total_return_pct)}
+                      </span>
+                      <span className="cellSub">
+                        {run.trade_count} {run.trade_count === 1 ? "trade" : "trades"}
+                        {run.trade_count > 0 ? ` · ${Math.round(run.win_rate_pct)}% win` : ""}
+                      </span>
+                    </td>
+                  );
+                })}
                 <td>{formatPercent(row.market_return_pct)}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      <h3 className="subHeading">Per coin</h3>
-      <div className="tableWrap">
-        <table className="dataTable">
-          <thead>
-            <tr>
-              <th>Period</th>
-              <th>Coin</th>
-              <th>Window</th>
-              <th>Trades</th>
-              <th>Win Rate</th>
-              <th>Equity</th>
-              <th>Return</th>
-              <th>Buy &amp; Hold</th>
-            </tr>
-          </thead>
-          <tbody>
-            {group.runs.map((run) => (
-              <tr key={`${run.period_name}-${run.product_id ?? run.id}`}>
-                <td>{formatPeriodName(run.period_name)}</td>
-                <td>{run.product_id ?? "—"}</td>
-                <td>
-                  {run.start_date} to {run.end_date}
-                </td>
-                <td>{run.trade_count}</td>
-                <td>{formatPercent(run.win_rate_pct)}</td>
-                <td>{formatCurrency(run.ending_equity_usd)}</td>
-                <td className={run.total_return_pct >= 0 ? "pnlUp" : "pnlDown"}>
-                  {formatPercent(run.total_return_pct)}
-                </td>
-                <td>{formatPercent(run.market_return_pct)}</td>
               </tr>
             ))}
           </tbody>

@@ -266,6 +266,13 @@ h2 {
   color: var(--muted);
 }
 
+.cellSub {
+  display: block;
+  margin-top: 2px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
 .pnlUp {
   color: #1f6b46;
   font-weight: 700;

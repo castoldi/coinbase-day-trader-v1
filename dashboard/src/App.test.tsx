@@ -122,26 +122,13 @@ function backtestsPayload() {
     created_at: "2026-06-14T20:00:00+00:00",
   };
   return {
-    total_runs: 2,
-    periods: ["2024", "2024"],
+    total_runs: 4,
+    periods: ["2024", "2024", "2024", "2024"],
     runs: [
-      {
-        ...base,
-        id: 1,
-        strategy_name: "ema_ribbon_reversal",
-        strategy_version: "1.0.0",
-        product_id: "BTC-USD",
-        notes: "EMA executed 12 trades.",
-      },
-      {
-        ...base,
-        id: 2,
-        strategy_name: "stochastic_swing",
-        strategy_version: "1.0.0",
-        product_id: "ETH-USD",
-        trade_count: 21,
-        notes: "Stochastic executed 21 trades.",
-      },
+      { ...base, id: 1, strategy_name: "ema_ribbon_reversal", strategy_version: "1.0.0", product_id: "BTC-USD", total_return_pct: 9, trade_count: 12, market_return_pct: 111, notes: "EMA executed 12 trades." },
+      { ...base, id: 2, strategy_name: "stochastic_swing", strategy_version: "1.0.0", product_id: "BTC-USD", total_return_pct: 11, trade_count: 8, market_return_pct: 111, notes: "Stochastic executed 21 trades." },
+      { ...base, id: 3, strategy_name: "ema_ribbon_reversal", strategy_version: "1.0.0", product_id: "ETH-USD", total_return_pct: -3, trade_count: 2, market_return_pct: 41, notes: "EMA executed 12 trades." },
+      { ...base, id: 4, strategy_name: "stochastic_swing", strategy_version: "1.0.0", product_id: "ETH-USD", total_return_pct: 2, trade_count: 5, market_return_pct: 41, notes: "Stochastic executed 21 trades." },
     ],
   };
 }
@@ -221,22 +208,20 @@ describe("App", () => {
     await waitFor(() => expect(callsTo("/api/backtests/summary")).toBeGreaterThan(before));
   });
 
-  it("shows a separate backtest section per strategy", async () => {
+  it("breaks down backtests per coin with strategies as columns", async () => {
     mockFetch();
     render(<App />);
     fireEvent.click(screen.getByRole("button", { name: "Backtests" }));
     expect(screen.getByRole("heading", { name: "Backtests" })).toBeTruthy();
-    await waitFor(() =>
-      expect(screen.getByRole("heading", { name: "ema_ribbon_reversal 1.0.0" })).toBeTruthy(),
-    );
-    expect(screen.getByRole("heading", { name: "stochastic_swing 1.0.0" })).toBeTruthy();
-    expect(screen.getAllByText("2024").length).toBeGreaterThan(0);
-    // each strategy section shows the coin that was traded
-    expect(screen.getByText("BTC-USD")).toBeTruthy();
-    expect(screen.getByText("ETH-USD")).toBeTruthy();
-    // and a combined (all-coins) summary plus the per-coin detail
-    expect(screen.getAllByText("Combined — all coins").length).toBe(2);
-    expect(screen.getAllByText("Per coin").length).toBe(2);
+    // one section per coin
+    await waitFor(() => expect(screen.getByRole("heading", { name: "BTC-USD" })).toBeTruthy());
+    expect(screen.getByRole("heading", { name: "ETH-USD" })).toBeTruthy();
+    // strategies appear as column headers (once per coin section)
+    expect(screen.getAllByText("ema_ribbon_reversal").length).toBe(2);
+    expect(screen.getAllByText("stochastic_swing").length).toBe(2);
+    // per coin/period/strategy return is shown
+    expect(screen.getByText("9.00%")).toBeTruthy(); // ema on BTC
+    expect(screen.getByText("11.00%")).toBeTruthy(); // stochastic on BTC
   });
 
   it("describes each strategy with its own chart examples and backtest note", async () => {

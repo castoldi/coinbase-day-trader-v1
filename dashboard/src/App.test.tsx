@@ -100,10 +100,7 @@ function strategiesPayload() {
 }
 
 function backtestsPayload() {
-  const run = {
-    id: 1,
-    strategy_name: "ema_ribbon_reversal",
-    strategy_version: "1.0.0",
+  const base = {
     period_name: "2024",
     product_ids: ["BTC-USD", "ETH-USD", "SOL-USD"],
     start_date: "2024-01-01",
@@ -118,7 +115,14 @@ function backtestsPayload() {
     notes: "Executed 5 trade(s) with a 60.0% win rate.",
     created_at: "2026-06-14T20:00:00+00:00",
   };
-  return { total_runs: 1, periods: ["2024"], runs: [run] };
+  return {
+    total_runs: 2,
+    periods: ["2024", "2024"],
+    runs: [
+      { ...base, id: 1, strategy_name: "ema_ribbon_reversal", strategy_version: "1.0.0" },
+      { ...base, id: 2, strategy_name: "stochastic_swing", strategy_version: "1.0.0" },
+    ],
+  };
 }
 
 function mockFetch() {
@@ -164,14 +168,17 @@ describe("App", () => {
     expect(screen.getByText("Safety lock")).toBeTruthy();
   });
 
-  it("shows recorded backtest runs when Backtests is selected", async () => {
+  it("shows a separate backtest section per strategy", async () => {
     mockFetch();
     render(<App />);
     fireEvent.click(screen.getByRole("button", { name: "Backtests" }));
     expect(screen.getByRole("heading", { name: "Backtests" })).toBeTruthy();
     await waitFor(() =>
-      expect(screen.getByText("Recorded 1 backtest runs for ema_ribbon_reversal 1.0.0.")).toBeTruthy(),
+      expect(screen.getByRole("heading", { name: "ema_ribbon_reversal 1.0.0" })).toBeTruthy(),
     );
+    expect(screen.getByRole("heading", { name: "stochastic_swing 1.0.0" })).toBeTruthy();
+    expect(screen.getByText("Recorded 1 run for ema_ribbon_reversal 1.0.0.")).toBeTruthy();
+    expect(screen.getByText("Recorded 1 run for stochastic_swing 1.0.0.")).toBeTruthy();
     expect(screen.getAllByText("2024").length).toBeGreaterThan(0);
   });
 

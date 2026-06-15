@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.3.1 - 2026-06-15
+
+- Fixed the Backtests page to group runs into a separate section per strategy (with its own periods and results table) instead of mislabeling all runs as one strategy. Added an overall "N runs across M strategies" summary.
+
 ## 0.3.0 - 2026-06-15
 
 - Added a second strategy, `stochastic_swing`, encoded from YouTube video `vzgRhKBMSyE`: long-only fast-Stochastic %K(5) oversold entry, fixed % target, and a trailing highest-high(5) exit.

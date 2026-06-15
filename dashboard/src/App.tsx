@@ -267,88 +267,104 @@ function BacktestsPage({
   error: string;
 }) {
   const runs = summary?.runs ?? [];
-  const runsByPeriod = new Map(runs.map((run) => [run.period_name, run]));
+  const groups: { key: string; name: string; version: string; runs: BacktestsSummary["runs"] }[] = [];
+  const index = new Map<string, (typeof groups)[number]>();
+  for (const run of runs) {
+    const key = `${run.strategy_name} ${run.strategy_version}`;
+    let group = index.get(key);
+    if (!group) {
+      group = { key, name: run.strategy_name, version: run.strategy_version, runs: [] };
+      index.set(key, group);
+      groups.push(group);
+    }
+    group.runs.push(run);
+  }
 
   return (
     <section className="pageStack">
-      <div className="pageGrid">
-        <article className="tableSurface">
-          <div className="sectionHeader">
-            <h2>Summary</h2>
-            <span>{loading ? "Loading" : `${summary?.total_runs ?? 0} runs`}</span>
-          </div>
-          <p>
-            {error
-              ? error
-              : runs.length
-                ? `Recorded ${runs.length} backtest runs for ${runs[0].strategy_name} ${runs[0].strategy_version}.`
-                : "No backtest runs recorded yet."}
-          </p>
-        </article>
-        <article className="tableSurface">
-          <div className="sectionHeader">
-            <h2>Standard Periods</h2>
-            <span>$1,000 each</span>
-          </div>
-          <ul className="coinList">
-            {backtestPeriods.map((period) => {
-              const run = runsByPeriod.get(period);
-              return (
-                <li key={period}>
-                  <span>{formatPeriodName(period)}</span>
-                  <strong>{run ? `${run.trade_count} trades` : loading ? "Loading" : "Pending"}</strong>
-                </li>
-              );
-            })}
-          </ul>
-        </article>
-      </div>
       <article className="tableSurface">
         <div className="sectionHeader">
-          <h2>Recorded Runs</h2>
-          <span>{runs.length ? "Stored in local database" : "Awaiting execution"}</span>
+          <h2>Summary</h2>
+          <span>{loading ? "Loading" : `${summary?.total_runs ?? 0} runs`}</span>
         </div>
-        {runs.length ? (
-          <div className="tableWrap">
-            <table className="dataTable">
-              <thead>
-                <tr>
-                  <th>Period</th>
-                  <th>Window</th>
-                  <th>Strategy</th>
-                  <th>Trades</th>
-                  <th>Win Rate</th>
-                  <th>Equity</th>
-                  <th>Return</th>
-                  <th>Market</th>
-                </tr>
-              </thead>
-              <tbody>
-                {runs.map((run) => (
-                  <tr key={`${run.period_name}-${run.strategy_name}-${run.strategy_version}`}>
-                    <td>{formatPeriodName(run.period_name)}</td>
-                    <td>
-                      {run.start_date} to {run.end_date}
-                    </td>
-                    <td>
-                      {run.strategy_name} {run.strategy_version}
-                    </td>
-                    <td>{run.trade_count}</td>
-                    <td>{formatPercent(run.win_rate_pct)}</td>
-                    <td>{formatCurrency(run.ending_equity_usd)}</td>
-                    <td>{formatPercent(run.total_return_pct)}</td>
-                    <td>{formatPercent(run.market_return_pct)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        ) : (
-          <p>No backtest runs recorded yet.</p>
-        )}
-        {runs.length ? <p className="inlineNote">{runs[0].notes}</p> : null}
+        <p>
+          {error
+            ? error
+            : runs.length
+              ? `Recorded ${runs.length} backtest run${runs.length === 1 ? "" : "s"} across ${groups.length} strateg${groups.length === 1 ? "y" : "ies"}.`
+              : loading
+                ? "Loading backtest runs."
+                : "No backtest runs recorded yet."}
+        </p>
       </article>
+      {groups.map((group) => (
+        <BacktestStrategySection key={group.key} group={group} loading={loading} />
+      ))}
     </section>
+  );
+}
+
+function BacktestStrategySection({
+  group,
+  loading,
+}: {
+  group: { key: string; name: string; version: string; runs: BacktestsSummary["runs"] };
+  loading: boolean;
+}) {
+  const runsByPeriod = new Map(group.runs.map((run) => [run.period_name, run]));
+  return (
+    <article className="tableSurface">
+      <div className="sectionHeader">
+        <h2>
+          {group.name} {group.version}
+        </h2>
+        <span>Stored in local database</span>
+      </div>
+      <p>
+        Recorded {group.runs.length} run{group.runs.length === 1 ? "" : "s"} for {group.name} {group.version}.
+      </p>
+      <ul className="coinList">
+        {backtestPeriods.map((period) => {
+          const run = runsByPeriod.get(period);
+          return (
+            <li key={period}>
+              <span>{formatPeriodName(period)}</span>
+              <strong>{run ? `${run.trade_count} trades` : loading ? "Loading" : "Pending"}</strong>
+            </li>
+          );
+        })}
+      </ul>
+      <div className="tableWrap">
+        <table className="dataTable">
+          <thead>
+            <tr>
+              <th>Period</th>
+              <th>Window</th>
+              <th>Trades</th>
+              <th>Win Rate</th>
+              <th>Equity</th>
+              <th>Return</th>
+              <th>Market</th>
+            </tr>
+          </thead>
+          <tbody>
+            {group.runs.map((run) => (
+              <tr key={`${run.period_name}-${run.id}`}>
+                <td>{formatPeriodName(run.period_name)}</td>
+                <td>
+                  {run.start_date} to {run.end_date}
+                </td>
+                <td>{run.trade_count}</td>
+                <td>{formatPercent(run.win_rate_pct)}</td>
+                <td>{formatCurrency(run.ending_equity_usd)}</td>
+                <td>{formatPercent(run.total_return_pct)}</td>
+                <td>{formatPercent(run.market_return_pct)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </article>
   );
 }
 

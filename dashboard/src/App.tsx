@@ -25,6 +25,8 @@ const navItems = [
 
 const backtestPeriods = ["2024", "2025", "2026", "last_30_days"] as const;
 
+const APP_VERSION = typeof __APP_VERSION__ !== "undefined" ? __APP_VERSION__ : "dev";
+
 export default function App() {
   const [activePage, setActivePage] = useState<Page>("Live Trading");
   const [dashboardSummary, setDashboardSummary] = useState<DashboardSummary | null>(null);
@@ -97,6 +99,7 @@ export default function App() {
             </button>
           ))}
         </nav>
+        <div className="buildTag">Build {APP_VERSION}</div>
       </aside>
       <section className="workspace">
         <header className="topbar">

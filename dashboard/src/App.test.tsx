@@ -171,6 +171,12 @@ describe("App", () => {
     expect(screen.getByRole("button", { name: "Strategies" })).toBeTruthy();
   });
 
+  it("shows a build version indicator", () => {
+    mockFetch();
+    render(<App />);
+    expect(screen.getByText(/^Build /)).toBeTruthy();
+  });
+
   it("shows live prices and open trades", async () => {
     mockFetch();
     render(<App />);

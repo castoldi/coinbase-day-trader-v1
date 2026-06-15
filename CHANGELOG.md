@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.4.1 - 2026-06-15
+
+- Stopped the dev server from letting the browser cache assets (`Cache-Control: no-store`) so a refresh always shows the latest dashboard.
+- Added a visible "Build <version>" indicator in the sidebar to confirm which build is loaded.
+
 ## 0.4.0 - 2026-06-15
 
 - Added a third strategy, `triple_screen_trend`, adapted from YouTube video `O3Q1uxBaIc0`: long-only trend-continuation on an EMA 27/55 uptrend, MACD momentum filter, pullback entry, swing-low stop, and 3:1 target.

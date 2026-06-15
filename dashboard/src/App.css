@@ -258,6 +258,14 @@ h2 {
   color: var(--muted);
 }
 
+.subHeading {
+  margin: 20px 0 0;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+
 .pnlUp {
   color: #1f6b46;
   font-weight: 700;

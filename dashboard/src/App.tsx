@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Activity, BarChart3, BookOpen, History, Landmark } from "lucide-react";
+import { aggregateRunsByPeriod } from "./aggregate";
 import {
   fetchBacktestsSummary,
   fetchDashboardSummary,
@@ -348,6 +349,7 @@ function BacktestStrategySection({
   group: { key: string; name: string; version: string; runs: BacktestsSummary["runs"] };
 }) {
   const coins = [...new Set(group.runs.map((run) => run.product_id ?? "—"))];
+  const combined = aggregateRunsByPeriod(group.runs);
   return (
     <article className="tableSurface">
       <div className="sectionHeader">
@@ -356,10 +358,38 @@ function BacktestStrategySection({
         </h2>
         <span>{coins.length} coins · $1,000 each</span>
       </div>
-      <p>
-        Recorded {group.runs.length} run{group.runs.length === 1 ? "" : "s"} for {group.name} {group.version}{" "}
-        — one per period per coin.
-      </p>
+
+      <h3 className="subHeading">Combined — all coins</h3>
+      <div className="tableWrap">
+        <table className="dataTable">
+          <thead>
+            <tr>
+              <th>Period</th>
+              <th>Trades</th>
+              <th>Win Rate</th>
+              <th>Equity</th>
+              <th>Return</th>
+              <th>Buy &amp; Hold</th>
+            </tr>
+          </thead>
+          <tbody>
+            {combined.map((row) => (
+              <tr key={`combined-${row.period_name}`}>
+                <td>{formatPeriodName(row.period_name)}</td>
+                <td>{row.trade_count}</td>
+                <td>{formatPercent(row.win_rate_pct)}</td>
+                <td>{formatCurrency(row.ending_equity_usd)}</td>
+                <td className={row.total_return_pct >= 0 ? "pnlUp" : "pnlDown"}>
+                  {formatPercent(row.total_return_pct)}
+                </td>
+                <td>{formatPercent(row.market_return_pct)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <h3 className="subHeading">Per coin</h3>
       <div className="tableWrap">
         <table className="dataTable">
           <thead>

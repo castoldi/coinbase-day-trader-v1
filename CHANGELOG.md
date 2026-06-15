@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.5.1 - 2026-06-15
+
+- Added a "Combined — all coins" summary table per strategy on the Backtests page (per period: total trades, trade-weighted win rate, combined equity, return, average Buy & Hold), keeping the per-coin detail below it.
+
 ## 0.5.0 - 2026-06-15
 
 - Backtests now run **per coin** (per strategy, per period, per coin), each coin starting with $1000, so you can see how each strategy performed on each coin (BTC/ETH/SOL) in each period instead of a blended portfolio number.

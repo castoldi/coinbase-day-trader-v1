@@ -230,12 +230,13 @@ describe("App", () => {
       expect(screen.getByRole("heading", { name: "ema_ribbon_reversal 1.0.0" })).toBeTruthy(),
     );
     expect(screen.getByRole("heading", { name: "stochastic_swing 1.0.0" })).toBeTruthy();
-    expect(screen.getByText(/Recorded 1 run for ema_ribbon_reversal 1\.0\.0/)).toBeTruthy();
-    expect(screen.getByText(/Recorded 1 run for stochastic_swing 1\.0\.0/)).toBeTruthy();
     expect(screen.getAllByText("2024").length).toBeGreaterThan(0);
     // each strategy section shows the coin that was traded
     expect(screen.getByText("BTC-USD")).toBeTruthy();
     expect(screen.getByText("ETH-USD")).toBeTruthy();
+    // and a combined (all-coins) summary plus the per-coin detail
+    expect(screen.getAllByText("Combined — all coins").length).toBe(2);
+    expect(screen.getAllByText("Per coin").length).toBe(2);
   });
 
   it("describes each strategy with its own chart examples and backtest note", async () => {

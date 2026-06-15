@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.4.0 - 2026-06-15
+
+- Added a third strategy, `triple_screen_trend`, adapted from YouTube video `O3Q1uxBaIc0`: long-only trend-continuation on an EMA 27/55 uptrend, MACD momentum filter, pullback entry, swing-low stop, and 3:1 target.
+- Fixed the Strategies page so each strategy card shows its own latest backtest result instead of a shared global one.
+- Confirmed the Backtests page renders one isolated section per strategy; `run-backtests` records each strategy independently.
+- Added the new strategy (with candlestick examples) to the Strategy page and refreshed dashboard screenshots.
+
 ## 0.3.1 - 2026-06-15
 
 - Fixed the Backtests page to group runs into a separate section per strategy (with its own periods and results table) instead of mislabeling all runs as one strategy. Added an overall "N runs across M strategies" summary.

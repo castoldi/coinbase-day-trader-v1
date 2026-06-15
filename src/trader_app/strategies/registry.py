@@ -1,12 +1,14 @@
 from trader_app.strategies.base import Strategy
 from trader_app.strategies.ema_ribbon_reversal import EmaRibbonReversalStrategy
 from trader_app.strategies.stochastic_swing import StochasticSwingStrategy
+from trader_app.strategies.triple_screen_trend import TripleScreenTrendStrategy
 
 
 def available_strategies() -> dict[str, type[Strategy]]:
     return {
         "ema_ribbon_reversal": EmaRibbonReversalStrategy,
         "stochastic_swing": StochasticSwingStrategy,
+        "triple_screen_trend": TripleScreenTrendStrategy,
     }
 
 

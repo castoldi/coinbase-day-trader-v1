@@ -96,6 +96,47 @@ _STOCH_TRAIL_EXAMPLE = {
 }
 
 
+# Triple-screen trend: uptrend pullback to the EMA zone, then reclaim -> 3:1 target.
+_TRIPLE_TARGET_EXAMPLE = {
+    "label": "Uptrend pullback → 3:1 target",
+    "side": "long",
+    "candles": [
+        _candle(93, 95, 92, 94),
+        _candle(94, 97, 93, 96),
+        _candle(96, 99, 95, 98),
+        _candle(98, 99, 96, 97),  # pullback into the EMA zone
+        _candle(97, 101, 97, 100),  # reclaim with bullish MACD -> entry
+        _candle(100, 105, 99, 104),
+        _candle(104, 108, 103, 107),
+        _candle(107, 110, 106, 109),  # 3:1 target reached
+    ],
+    "entry": 100.0,
+    "stop_loss": 97.0,
+    "take_profit": 109.0,
+    "entry_index": 4,
+}
+
+# Triple-screen trend: entry that fails and exits at the swing-low stop.
+_TRIPLE_STOP_EXAMPLE = {
+    "label": "Pullback entry → swing-low stop",
+    "side": "long",
+    "candles": [
+        _candle(95, 97, 94, 96),
+        _candle(96, 99, 95, 98),
+        _candle(98, 100, 96, 99),
+        _candle(99, 100, 97, 98),  # pullback
+        _candle(98, 102, 97, 100),  # reclaim -> entry
+        _candle(100, 101, 97, 98),  # rolls over
+        _candle(98, 99, 96, 97),  # hits the swing-low stop
+        _candle(97, 98, 95, 96),
+    ],
+    "entry": 100.0,
+    "stop_loss": 97.0,
+    "take_profit": 109.0,
+    "entry_index": 4,
+}
+
+
 def strategy_catalog() -> list[dict[str, object]]:
     return [
         {
@@ -146,5 +187,28 @@ def strategy_catalog() -> list[dict[str, object]]:
                 "risk": "Long-only; diversify across several tickers because setups are infrequent.",
             },
             "examples": [_STOCH_TARGET_EXAMPLE, _STOCH_TRAIL_EXAMPLE],
+        },
+        {
+            "name": "triple_screen_trend",
+            "version": "1.0.0",
+            "title": "Triple-Screen Trend",
+            "summary": (
+                "A long-only trend-continuation strategy adapted from a Renko triple-screen (Alexander "
+                "Elder) approach: trade pullbacks in the direction of the EMA trend, confirmed by MACD."
+            ),
+            "rules": {
+                "indicators": [
+                    "EMA 27 vs EMA 55 — higher-timeframe trend direction.",
+                    "MACD — momentum filter (longs only when MACD is bullish).",
+                ],
+                "entry": (
+                    "Long when EMA 27 is above EMA 55 (uptrend), price pulls back to the moving-average "
+                    "zone, then reclaims the fast EMA with a bullish candle while MACD agrees."
+                ),
+                "stop_loss": "At the recent swing low (the bottom of the pullback).",
+                "take_profit": "Fixed 3:1 reward-to-risk (the source targets a Fibonacci expansion).",
+                "risk": "Long-only; trade with the trend and protect to breakeven once price moves 1:1.",
+            },
+            "examples": [_TRIPLE_TARGET_EXAMPLE, _TRIPLE_STOP_EXAMPLE],
         },
     ]

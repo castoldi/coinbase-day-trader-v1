@@ -50,6 +50,7 @@ def test_strategies_endpoint_describes_strategies_with_examples(tmp_path):
     names = [strategy["name"] for strategy in payload["strategies"]]
     assert "ema_ribbon_reversal" in names
     assert "stochastic_swing" in names
+    assert "triple_screen_trend" in names
     for strategy in payload["strategies"]:
         assert {"entry", "stop_loss", "take_profit"} <= set(strategy["rules"].keys())
         assert len(strategy["examples"]) == 2

@@ -29,6 +29,7 @@ Available strategy names (the registry keys in `src/trader_app/strategies/regist
 | --- | --- | --- |
 | `ema_ribbon_reversal` | `src/trader_app/strategies/ema_ribbon_reversal.py` | EMA ribbon reversal (EMA 5/100/200 of high/low/close, 2:1 reward:risk), encoded from YouTube video `HkMXGqz7MRI`. This is the default strategy. |
 | `stochastic_swing` | `src/trader_app/strategies/stochastic_swing.py` | Long-only fast-Stochastic swing: buy when %K(5) < 5 (oversold), take a fixed % profit (default 3%) with a trailing highest-high(5) exit. Encoded from YouTube video `vzgRhKBMSyE`. |
+| `triple_screen_trend` | `src/trader_app/strategies/triple_screen_trend.py` | Long-only trend-continuation: buy pullbacks in an EMA 27/55 uptrend confirmed by MACD; swing-low stop, 3:1 target. Adapted from the Renko triple-screen approach in YouTube video `O3Q1uxBaIc0`. |
 
 ### Starting the bot with a chosen strategy
 

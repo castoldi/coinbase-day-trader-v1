@@ -53,48 +53,53 @@ function summaryPayload() {
   };
 }
 
+function strategyEntry(name: string, title: string) {
+  return {
+    name,
+    version: "1.0.0",
+    title,
+    summary: `${title} summary.`,
+    rules: {
+      indicators: ["Indicator line."],
+      entry: "Entry rule.",
+      stop_loss: "Stop rule.",
+      take_profit: "Target rule.",
+      risk: "Risk rule.",
+    },
+    examples: [
+      {
+        label: "Long setup",
+        side: "long",
+        candles: [
+          { open: 101, high: 108, low: 101, close: 105 },
+          { open: 105, high: 112, low: 104, close: 111 },
+        ],
+        entry: 105,
+        stop_loss: 100,
+        take_profit: 115,
+        entry_index: 0,
+      },
+      {
+        label: "Second setup",
+        side: "long",
+        candles: [
+          { open: 99, high: 99, low: 92, close: 95 },
+          { open: 95, high: 96, low: 88, close: 89 },
+        ],
+        entry: 95,
+        stop_loss: 90,
+        take_profit: 105,
+        entry_index: 0,
+      },
+    ],
+  };
+}
+
 function strategiesPayload() {
   return {
     strategies: [
-      {
-        name: "ema_ribbon_reversal",
-        version: "1.0.0",
-        title: "EMA Ribbon Reversal",
-        summary: "A reversal strategy.",
-        rules: {
-          indicators: ["Orange line: EMA(200)."],
-          entry: "Close above white channel after pullback.",
-          stop_loss: "Below the green channel.",
-          take_profit: "2:1 reward-to-risk.",
-          risk: "1% rule.",
-        },
-        examples: [
-          {
-            label: "Long reversal setup",
-            side: "long",
-            candles: [
-              { open: 101, high: 108, low: 101, close: 105 },
-              { open: 105, high: 112, low: 104, close: 111 },
-            ],
-            entry: 105,
-            stop_loss: 100,
-            take_profit: 115,
-            entry_index: 0,
-          },
-          {
-            label: "Short reversal setup",
-            side: "short",
-            candles: [
-              { open: 99, high: 99, low: 92, close: 95 },
-              { open: 95, high: 96, low: 88, close: 89 },
-            ],
-            entry: 95,
-            stop_loss: 100,
-            take_profit: 85,
-            entry_index: 0,
-          },
-        ],
-      },
+      strategyEntry("ema_ribbon_reversal", "EMA Ribbon Reversal"),
+      strategyEntry("stochastic_swing", "Fast Stochastic Swing"),
     ],
   };
 }
@@ -119,8 +124,21 @@ function backtestsPayload() {
     total_runs: 2,
     periods: ["2024", "2024"],
     runs: [
-      { ...base, id: 1, strategy_name: "ema_ribbon_reversal", strategy_version: "1.0.0" },
-      { ...base, id: 2, strategy_name: "stochastic_swing", strategy_version: "1.0.0" },
+      {
+        ...base,
+        id: 1,
+        strategy_name: "ema_ribbon_reversal",
+        strategy_version: "1.0.0",
+        notes: "EMA executed 12 trades.",
+      },
+      {
+        ...base,
+        id: 2,
+        strategy_name: "stochastic_swing",
+        strategy_version: "1.0.0",
+        trade_count: 21,
+        notes: "Stochastic executed 21 trades.",
+      },
     ],
   };
 }
@@ -182,12 +200,14 @@ describe("App", () => {
     expect(screen.getAllByText("2024").length).toBeGreaterThan(0);
   });
 
-  it("describes the strategy with chart examples", async () => {
+  it("describes each strategy with its own chart examples and backtest note", async () => {
     mockFetch();
     render(<App />);
     fireEvent.click(screen.getByRole("button", { name: "Strategies" }));
     await waitFor(() => expect(screen.getByText("EMA Ribbon Reversal")).toBeTruthy());
-    expect(screen.getByText("Long reversal setup")).toBeTruthy();
-    expect(screen.getByText("Short reversal setup")).toBeTruthy();
+    expect(screen.getByText("Fast Stochastic Swing")).toBeTruthy();
+    // each card shows ITS OWN latest backtest note, not a shared/global one
+    expect(screen.getByText(/EMA executed 12 trades\./)).toBeTruthy();
+    expect(screen.getByText(/Stochastic executed 21 trades\./)).toBeTruthy();
   });
 });

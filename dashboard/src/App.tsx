@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Activity, BarChart3, BookOpen, History, Landmark } from "lucide-react";
 import {
   fetchBacktestsSummary,
@@ -75,15 +75,6 @@ export default function App() {
     };
   }, []);
 
-  const latestRun = useMemo(() => {
-    if (!backtestsSummary?.runs.length) {
-      return null;
-    }
-    return [...backtestsSummary.runs]
-      .filter((run) => run.created_at)
-      .sort((left, right) => String(right.created_at).localeCompare(String(left.created_at)))[0] ?? null;
-  }, [backtestsSummary]);
-
   return (
     <main className="appShell">
       <aside className="sidebar">
@@ -129,7 +120,9 @@ export default function App() {
         {activePage === "Backtests" && (
           <BacktestsPage summary={backtestsSummary} loading={backtestsLoading} error={backtestsError} />
         )}
-        {activePage === "Strategies" && <StrategiesPage strategies={strategies} latestRun={latestRun} />}
+        {activePage === "Strategies" && (
+          <StrategiesPage strategies={strategies} backtests={backtestsSummary} />
+        )}
       </section>
     </main>
   );
@@ -370,10 +363,10 @@ function BacktestStrategySection({
 
 function StrategiesPage({
   strategies,
-  latestRun,
+  backtests,
 }: {
   strategies: StrategiesResponse | null;
-  latestRun: BacktestsSummary["runs"][number] | null;
+  backtests: BacktestsSummary | null;
 }) {
   if (!strategies?.strategies.length) {
     return (
@@ -385,11 +378,18 @@ function StrategiesPage({
     );
   }
 
+  const allRuns = backtests?.runs ?? [];
+
   return (
     <section className="pageStack">
-      {strategies.strategies.map((strategy) => (
-        <StrategyCard key={strategy.name} strategy={strategy} latestRun={latestRun} />
-      ))}
+      {strategies.strategies.map((strategy) => {
+        const strategyRuns = allRuns.filter((run) => run.strategy_name === strategy.name);
+        const latestRun =
+          [...strategyRuns]
+            .filter((run) => run.created_at)
+            .sort((left, right) => String(right.created_at).localeCompare(String(left.created_at)))[0] ?? null;
+        return <StrategyCard key={strategy.name} strategy={strategy} latestRun={latestRun} />;
+      })}
     </section>
   );
 }

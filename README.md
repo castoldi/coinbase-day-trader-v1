@@ -66,6 +66,9 @@ The dashboard binds to all local network interfaces and runs on port `8011`. On 
 - `stochastic_swing`: a long-only fast-Stochastic swing strategy encoded from a swing-trade video.
   - **Entry:** fast Stochastic %K (period 5) drops below 5 (oversold) — buy at the close.
   - **Exit:** a fixed percentage target above entry (default 3%; smaller targets raise the win rate), with a trailing highest-high(5) line that exits the position if the target is not reached.
+- `triple_screen_trend`: a long-only trend-continuation strategy adapted from a Renko triple-screen (Alexander Elder) video.
+  - **Entry:** EMA 27 above EMA 55 (uptrend), price pulls back to the moving-average zone, then reclaims the fast EMA with a bullish candle while MACD agrees.
+  - **Exit:** stop at the recent swing low; take-profit at 3:1 reward:risk.
 
 The Strategies page in the dashboard shows annotated candlestick chart examples for each strategy's setups.
 

@@ -20,4 +20,5 @@ def test_env_example_has_no_secret_values():
     env_example = (ROOT / ".env.example").read_text(encoding="utf-8")
     assert "COINBASE_API_KEY_NAME=" in env_example
     assert "GMAIL_APP_PASSWORD=" in env_example
+    assert "DASHBOARD_PORT=8011" in env_example
     assert "replace-me" not in env_example.lower()

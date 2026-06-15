@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.1 - 2026-06-15
+
+- Changed the dashboard development port from 5173 to 8011 across settings, `.env.example`, scripts, docs, and dashboard package metadata.
+- Updated config tests so local ignored `.env` secrets do not override default-setting assertions.
+
 ## 0.1.0 - 2026-06-15
 
 - Added approved local paper trading design.

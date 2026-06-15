@@ -37,7 +37,7 @@ class Settings(BaseSettings):
     api_host: str = "127.0.0.1"
     api_port: int = 8000
     dashboard_host: str = "127.0.0.1"
-    dashboard_port: int = 5173
+    dashboard_port: int = 8011
     email_subject_prefix: str = "AI-BOT"
 
     @model_validator(mode="after")

@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.4.4 - 2026-06-15
+
+- Renamed the Backtests "Market" column to "Buy & Hold" and added a note clarifying it is the market benchmark (identical for every strategy), not the strategy's own result.
+
 ## 0.4.3 - 2026-06-15
 
 - The active dashboard page is now kept in the URL hash, so a refresh stays on the same page instead of jumping back to Live Trading.

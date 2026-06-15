@@ -329,6 +329,13 @@ function BacktestsPage({
                 ? "Loading backtest runs."
                 : "No backtest runs recorded yet."}
         </p>
+        {runs.length ? (
+          <p className="inlineNote">
+            "Buy &amp; Hold" is the benchmark return of the coins over each window and is the same for
+            every strategy. Each strategy's own result is in the Trades, Win Rate, Equity, and Return
+            columns.
+          </p>
+        ) : null}
       </article>
       {groups.map((group) => (
         <BacktestStrategySection key={group.key} group={group} loading={loading} />
@@ -377,7 +384,7 @@ function BacktestStrategySection({
               <th>Win Rate</th>
               <th>Equity</th>
               <th>Return</th>
-              <th>Market</th>
+              <th>Buy &amp; Hold</th>
             </tr>
           </thead>
           <tbody>

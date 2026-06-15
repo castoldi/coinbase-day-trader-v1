@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.2 - 2026-06-15
+
+- Documented the available strategies and how to start the bot with a chosen strategy (`ema_ribbon_reversal`, a list, or `ALL`) in `AGENTS.md`.
+
 ## 0.2.1 - 2026-06-15
 
 - Captured fresh dashboard screenshots (Live, Strategies, Backtests) from the running app and embedded them in the README.

@@ -59,6 +59,43 @@ _SHORT_EXAMPLE = {
 }
 
 
+# Stochastic swing long: oversold dip, then price rallies to the % target.
+_STOCH_TARGET_EXAMPLE = {
+    "label": "Oversold dip → % target",
+    "side": "long",
+    "candles": [
+        _candle(105, 106, 103, 104),
+        _candle(104, 105, 101, 102),
+        _candle(102, 103, 99, 100),  # %K below 5 (oversold) -> buy at 100
+        _candle(100, 104, 100, 103),  # rallies to the +3% target
+        _candle(103, 107, 102, 106),
+        _candle(106, 108, 105, 107),
+    ],
+    "entry": 100.0,
+    "stop_loss": 99.0,  # trailing highest-high exit line (no hard stop in this strategy)
+    "take_profit": 103.0,
+    "entry_index": 2,
+}
+
+# Stochastic swing long: target missed, position exits on the trailing highest-high line.
+_STOCH_TRAIL_EXAMPLE = {
+    "label": "Trailing exit (target missed)",
+    "side": "long",
+    "candles": [
+        _candle(105, 106, 103, 104),
+        _candle(104, 105, 101, 102),
+        _candle(102, 103, 98, 100),  # oversold -> buy at 100
+        _candle(100, 101, 99, 100),  # weak bounce, stays under the +3% target
+        _candle(100, 100, 97, 98),   # rolls over
+        _candle(98, 99, 96, 97),     # exits on the falling highest-high line
+    ],
+    "entry": 100.0,
+    "stop_loss": 99.0,  # trailing highest-high exit line
+    "take_profit": 103.0,
+    "entry_index": 2,
+}
+
+
 def strategy_catalog() -> list[dict[str, object]]:
     return [
         {
@@ -85,5 +122,29 @@ def strategy_catalog() -> list[dict[str, object]]:
                 "risk": "Author recommends the 1% risk rule per trade.",
             },
             "examples": [_LONG_EXAMPLE, _SHORT_EXAMPLE],
-        }
+        },
+        {
+            "name": "stochastic_swing",
+            "version": "1.0.0",
+            "title": "Fast Stochastic Swing",
+            "summary": (
+                "A long-only swing strategy that buys oversold dips on the fast Stochastic and takes "
+                "a small fixed percentage profit, with a trailing highest-high exit. Adapted from the "
+                "source swing-trade video."
+            ),
+            "rules": {
+                "indicators": [
+                    "Fast Stochastic %K (period 5) — momentum / oversold detector.",
+                    "Highest-high (period 5) — trailing exit line.",
+                ],
+                "entry": "Long when the fast Stochastic %K drops below 5 (oversold); buy at the close.",
+                "stop_loss": (
+                    "No hard stop. The position exits on the trailing highest-high line, which "
+                    "falls over time as old highs roll off."
+                ),
+                "take_profit": "A configurable percentage above entry (default 3%); smaller targets raise the win rate.",
+                "risk": "Long-only; diversify across several tickers because setups are infrequent.",
+            },
+            "examples": [_STOCH_TARGET_EXAMPLE, _STOCH_TRAIL_EXAMPLE],
+        },
     ]

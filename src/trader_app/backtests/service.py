@@ -150,11 +150,17 @@ class BacktestService:
 
                 position = positions.get(product_id)
                 if position is not None:
+                    stop = position["stop"]
+                    take = position["take"]
                     exit_price = None
-                    if today.low <= position["stop"]:
-                        exit_price = position["stop"]
-                    elif today.high >= position["take"]:
-                        exit_price = position["take"]
+                    if stop is not None and today.low <= stop:
+                        exit_price = stop
+                    elif take is not None and today.high >= take:
+                        exit_price = take
+                    else:
+                        exit_price = self._strategy_exit(
+                            strategy, strategy_candles[product_id][: last_index + 1], position["entry"]
+                        )
                     if exit_price is not None:
                         proceeds = position["quantity"] * exit_price
                         pnl = proceeds - position["cost"]
@@ -167,18 +173,14 @@ class BacktestService:
 
                 if position is None:
                     signal = strategy.generate_signal(strategy_candles[product_id][: last_index + 1])
-                    if (
-                        signal.action == "buy"
-                        and signal.stop_loss is not None
-                        and signal.take_profit is not None
-                        and today.close > 0
-                    ):
+                    if signal.action == "buy" and signal.take_profit is not None and today.close > 0:
                         spend = min(allocation, cash)
                         if spend > 0:
                             quantity = spend / today.close
                             positions[product_id] = {
                                 "quantity": quantity,
                                 "cost": quantity * today.close,
+                                "entry": today.close,
                                 "stop": signal.stop_loss,
                                 "take": signal.take_profit,
                             }
@@ -210,6 +212,13 @@ class BacktestService:
             "win_rate_pct": (wins / trade_count * 100) if trade_count else 0.0,
             "trade_count": trade_count,
         }
+
+    @staticmethod
+    def _strategy_exit(strategy, candles: list[Candle], entry_price: float) -> float | None:
+        exit_signal = getattr(strategy, "exit_signal", None)
+        if exit_signal is None:
+            return None
+        return exit_signal(candles, entry_price)
 
     def load_strategy_candles(self, product_id: str, start_date: date, end_date: date) -> list[Candle]:
         return self._to_strategy_candles(product_id, self.candle_loader(product_id, start_date, end_date))

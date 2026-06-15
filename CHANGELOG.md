@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.3.0 - 2026-06-15
+
+- Added a second strategy, `stochastic_swing`, encoded from YouTube video `vzgRhKBMSyE`: long-only fast-Stochastic %K(5) oversold entry, fixed % target, and a trailing highest-high(5) exit.
+- Added an optional `exit_signal` hook so strategies can drive path-dependent exits; wired it into both the backtest simulator and the live trading engine.
+- `run-backtests` now runs every registered strategy, so the Backtests page covers all strategies.
+- Added the new strategy (with candlestick examples) to the Strategy page and refreshed the dashboard screenshots.
+- Real backtests: `stochastic_swing` shows high win rates (2024 71%, 2025 87%, 2026 80%) with small targets.
+
 ## 0.2.2 - 2026-06-15
 
 - Documented the available strategies and how to start the bot with a chosen strategy (`ema_ribbon_reversal`, a list, or `ALL`) in `AGENTS.md`.

@@ -58,12 +58,17 @@ class TradingEngine:
                 open_trades = self._open_trades(product_id, strategy.name)
 
                 for trade in open_trades:
+                    fill: float | None = None
                     if self._should_exit(trade, price, signal.action):
-                        self.broker.close_trade(trade.id, price)
+                        fill = price
+                    else:
+                        fill = self._strategy_exit(strategy, candles, trade.entry_price_usd)
+                    if fill is not None:
+                        self.broker.close_trade(trade.id, fill)
                         closed += 1
                         self._notify(
                             "Trade closed",
-                            f"{product_id} closed at {price:.2f} ({strategy.name}).",
+                            f"{product_id} closed at {fill:.2f} ({strategy.name}).",
                         )
 
                 if not self._open_trades(product_id, strategy.name) and self._is_buy(signal):
@@ -111,7 +116,14 @@ class TradingEngine:
 
     @staticmethod
     def _is_buy(signal) -> bool:
-        return signal.action == "buy" and signal.stop_loss is not None and signal.take_profit is not None
+        return signal.action == "buy" and signal.take_profit is not None
+
+    @staticmethod
+    def _strategy_exit(strategy, candles, entry_price: float) -> float | None:
+        exit_signal = getattr(strategy, "exit_signal", None)
+        if exit_signal is None:
+            return None
+        return exit_signal(candles, entry_price)
 
     @staticmethod
     def _should_exit(trade: Trade, price: float, action: str) -> bool:

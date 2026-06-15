@@ -42,17 +42,18 @@ def test_dashboard_summary_uses_injected_prices(tmp_path):
     assert prices["BTC-USD"] == 65000.0
 
 
-def test_strategies_endpoint_describes_strategy_with_examples(tmp_path):
+def test_strategies_endpoint_describes_strategies_with_examples(tmp_path):
     client = make_client(tmp_path)
     response = client.get("/api/strategies")
     assert response.status_code == 200
     payload = response.json()
-    assert payload["strategies"], "expected at least one strategy"
-    strategy = payload["strategies"][0]
-    assert strategy["name"] == "ema_ribbon_reversal"
-    assert {"entry", "stop_loss", "take_profit"} <= set(strategy["rules"].keys())
-    assert len(strategy["examples"]) == 2
-    example = strategy["examples"][0]
-    assert example["candles"], "example must include candles"
-    assert {"open", "high", "low", "close"} <= set(example["candles"][0].keys())
-    assert {"entry", "stop_loss", "take_profit"} <= set(example.keys())
+    names = [strategy["name"] for strategy in payload["strategies"]]
+    assert "ema_ribbon_reversal" in names
+    assert "stochastic_swing" in names
+    for strategy in payload["strategies"]:
+        assert {"entry", "stop_loss", "take_profit"} <= set(strategy["rules"].keys())
+        assert len(strategy["examples"]) == 2
+        example = strategy["examples"][0]
+        assert example["candles"], "example must include candles"
+        assert {"open", "high", "low", "close"} <= set(example["candles"][0].keys())
+        assert {"entry", "stop_loss", "take_profit"} <= set(example.keys())

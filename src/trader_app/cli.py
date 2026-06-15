@@ -29,7 +29,7 @@ def main() -> None:
         return
 
     if args.command == "run-backtests":
-        service = BacktestService(session_factory, settings)
+        service = BacktestService(session_factory, settings, strategies=load_strategies("ALL"))
         runs = service.run_standard_backtests()
         print({"runs_recorded": len(runs), "periods": [run.period_name for run in runs]})
         return

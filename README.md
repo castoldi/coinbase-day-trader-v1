@@ -63,8 +63,13 @@ The dashboard binds to all local network interfaces and runs on port `8011`. On 
   - **Green channel** — EMA(100) of high and EMA(100) of low for the pullback zone.
   - **White channel** — EMA(5) of high and EMA(5) of low for the end-of-pullback trigger.
   - **Long:** price and white channel cross above the orange line, price pulls back to touch the green channel, then a candle closes above the white channel. Stop below the green channel; take-profit at 2:1 reward:risk. Short is the mirror image (paper trading is long-only spot, so short signals close open longs).
+- `stochastic_swing`: a long-only fast-Stochastic swing strategy encoded from a swing-trade video.
+  - **Entry:** fast Stochastic %K (period 5) drops below 5 (oversold) — buy at the close.
+  - **Exit:** a fixed percentage target above entry (default 3%; smaller targets raise the win rate), with a trailing highest-high(5) line that exits the position if the target is not reached.
 
-The Strategies page in the dashboard shows annotated candlestick chart examples for the long and short setups.
+The Strategies page in the dashboard shows annotated candlestick chart examples for each strategy's setups.
+
+Select strategies at startup with `--strategies` (a single name, a comma-separated list, or `ALL`); see `AGENTS.md`.
 
 ## Backtests
 

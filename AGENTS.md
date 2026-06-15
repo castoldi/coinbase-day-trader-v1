@@ -28,6 +28,7 @@ Available strategy names (the registry keys in `src/trader_app/strategies/regist
 | Name | File | Description |
 | --- | --- | --- |
 | `ema_ribbon_reversal` | `src/trader_app/strategies/ema_ribbon_reversal.py` | EMA ribbon reversal (EMA 5/100/200 of high/low/close, 2:1 reward:risk), encoded from YouTube video `HkMXGqz7MRI`. This is the default strategy. |
+| `stochastic_swing` | `src/trader_app/strategies/stochastic_swing.py` | Long-only fast-Stochastic swing: buy when %K(5) < 5 (oversold), take a fixed % profit (default 3%) with a trailing highest-high(5) exit. Encoded from YouTube video `vzgRhKBMSyE`. |
 
 ### Starting the bot with a chosen strategy
 
@@ -50,7 +51,7 @@ The `--strategies` option accepts a single name, a comma-separated list, or `ALL
 - Start with several specific strategies (comma-separated, no spaces):
 
   ```powershell
-  trader start-bot --strategies ema_ribbon_reversal,another_strategy
+  trader start-bot --strategies ema_ribbon_reversal,stochastic_swing
   ```
 
 `DEFAULT_STRATEGIES` in `.env` sets the default when `--strategies` is omitted; it is currently `ema_ribbon_reversal`. Each `start-bot` call ensures the heartbeat and runs one paper-trading cycle, so schedule it every ~30 minutes (Windows Task Scheduler).

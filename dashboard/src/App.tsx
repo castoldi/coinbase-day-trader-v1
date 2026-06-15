@@ -1,5 +1,17 @@
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Activity, BarChart3, BookOpen, History, Landmark } from "lucide-react";
+import {
+  fetchBacktestsSummary,
+  fetchDashboardSummary,
+  fetchStrategies,
+  type BacktestsSummary,
+  type DashboardSummary,
+  type PriceRow,
+  type StrategiesResponse,
+  type StrategyExample,
+  type StrategyInfo,
+  type Trade,
+} from "./api";
 
 type Page = "Live Trading" | "Trading History" | "Account Management" | "Backtests" | "Strategies";
 
@@ -11,17 +23,66 @@ const navItems = [
   ["Strategies", BookOpen],
 ] as const;
 
-const metrics = [
-  ["Equity", "$1,000.00", "Starting paper capital"],
-  ["Cash", "$1,000.00", "Available to deploy"],
-  ["PnL", "$0.00", "Realized"],
-  ["Win Rate", "0%", "No closed trades"],
-] as const;
-
-const backtestPeriods = ["2024", "2025", "2026", "Last 30 days"] as const;
+const backtestPeriods = ["2024", "2025", "2026", "last_30_days"] as const;
 
 export default function App() {
   const [activePage, setActivePage] = useState<Page>("Live Trading");
+  const [dashboardSummary, setDashboardSummary] = useState<DashboardSummary | null>(null);
+  const [backtestsSummary, setBacktestsSummary] = useState<BacktestsSummary | null>(null);
+  const [strategies, setStrategies] = useState<StrategiesResponse | null>(null);
+  const [dashboardError, setDashboardError] = useState("");
+  const [backtestsError, setBacktestsError] = useState("");
+  const [dashboardLoading, setDashboardLoading] = useState(true);
+  const [backtestsLoading, setBacktestsLoading] = useState(true);
+
+  useEffect(() => {
+    let alive = true;
+
+    async function load<T>(
+      loader: () => Promise<T>,
+      onData: (data: T) => void,
+      onError: (message: string) => void,
+      fallback: string,
+      onSettled?: () => void,
+    ) {
+      try {
+        const data = await loader();
+        if (alive) {
+          onData(data);
+          onError("");
+        }
+      } catch (error) {
+        if (alive) {
+          onError(error instanceof Error ? error.message : fallback);
+        }
+      } finally {
+        if (alive) {
+          onSettled?.();
+        }
+      }
+    }
+
+    void load(fetchDashboardSummary, setDashboardSummary, setDashboardError, "Dashboard request failed", () =>
+      setDashboardLoading(false),
+    );
+    void load(fetchBacktestsSummary, setBacktestsSummary, setBacktestsError, "Backtests request failed", () =>
+      setBacktestsLoading(false),
+    );
+    void load(fetchStrategies, setStrategies, () => {}, "Strategies request failed");
+
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  const latestRun = useMemo(() => {
+    if (!backtestsSummary?.runs.length) {
+      return null;
+    }
+    return [...backtestsSummary.runs]
+      .filter((run) => run.created_at)
+      .sort((left, right) => String(right.created_at).localeCompare(String(left.created_at)))[0] ?? null;
+  }, [backtestsSummary]);
 
   return (
     <main className="appShell">
@@ -52,19 +113,48 @@ export default function App() {
             <p className="eyebrow">Paper trading control room</p>
             <h1>{activePage}</h1>
           </div>
-          <span className="statusPill">Local mode</span>
+          <span className="statusPill">
+            {dashboardSummary?.bot.status ? dashboardSummary.bot.status.replaceAll("_", " ") : "Loading"}
+          </span>
         </header>
-        {activePage === "Live Trading" && <LiveTradingPage />}
-        {activePage === "Trading History" && <TradingHistoryPage />}
-        {activePage === "Account Management" && <AccountManagementPage />}
-        {activePage === "Backtests" && <BacktestsPage />}
-        {activePage === "Strategies" && <StrategiesPage />}
+        {activePage === "Live Trading" && (
+          <LiveTradingPage summary={dashboardSummary} loading={dashboardLoading} error={dashboardError} />
+        )}
+        {activePage === "Trading History" && (
+          <TradingHistoryPage summary={dashboardSummary} loading={dashboardLoading} error={dashboardError} />
+        )}
+        {activePage === "Account Management" && (
+          <AccountManagementPage summary={dashboardSummary} loading={dashboardLoading} error={dashboardError} />
+        )}
+        {activePage === "Backtests" && (
+          <BacktestsPage summary={backtestsSummary} loading={backtestsLoading} error={backtestsError} />
+        )}
+        {activePage === "Strategies" && <StrategiesPage strategies={strategies} latestRun={latestRun} />}
       </section>
     </main>
   );
 }
 
-function LiveTradingPage() {
+function LiveTradingPage({
+  summary,
+  loading,
+  error,
+}: {
+  summary: DashboardSummary | null;
+  loading: boolean;
+  error: string;
+}) {
+  const metrics = [
+    ["Equity", formatCurrency(summary?.account.equity_usd ?? 1000), "Paper account equity"],
+    ["Cash", formatCurrency(summary?.account.cash_usd ?? 1000), "Available to deploy"],
+    ["Realized PnL", formatCurrency(summary?.account.realized_pnl_usd ?? 0), "Closed trade performance"],
+    [
+      "Win Rate",
+      `${(summary?.metrics.win_rate_pct ?? 0).toFixed(0)}%`,
+      `${summary?.metrics.closed_count ?? 0} closed trades`,
+    ],
+  ] as const;
+
   return (
     <>
       <section className="metricGrid" aria-label="Trading metrics">
@@ -72,117 +162,419 @@ function LiveTradingPage() {
           <article key={label}>
             <span>{label}</span>
             <strong>{value}</strong>
-            <small>{note}</small>
+            <small>{loading ? "Loading…" : note}</small>
           </article>
         ))}
       </section>
+      {error ? <p className="feedbackText">{error}</p> : null}
       <section className="tradeLayout">
         <article className="tableSurface">
           <div className="sectionHeader">
             <h2>Open Trades</h2>
-            <span>0 active</span>
+            <span>{summary?.trades.open.length ?? 0} active</span>
           </div>
-          <p>No open trades.</p>
+          <TradeTable trades={summary?.trades.open ?? []} emptyText="No open trades." />
         </article>
         <article className="tableSurface">
           <div className="sectionHeader">
-            <h2>Coins Trading</h2>
-            <span>Watchlist</span>
+            <h2>Coin Prices</h2>
+            <span>Latest close</span>
           </div>
-          <ul className="coinList">
-            <li><span>BTC-USD</span><strong>Ready</strong></li>
-            <li><span>ETH-USD</span><strong>Ready</strong></li>
-            <li><span>SOL-USD</span><strong>Ready</strong></li>
-          </ul>
+          <PriceList prices={summary?.prices ?? []} />
         </article>
       </section>
     </>
   );
 }
 
-function TradingHistoryPage() {
+function TradingHistoryPage({
+  summary,
+  loading,
+  error,
+}: {
+  summary: DashboardSummary | null;
+  loading: boolean;
+  error: string;
+}) {
   return (
-    <section className="pageGrid">
+    <section className="pageStack">
       <article className="tableSurface">
         <div className="sectionHeader">
           <h2>Closed Trades</h2>
-          <span>0 recorded</span>
+          <span>{summary?.trades.closed.length ?? 0} recorded</span>
         </div>
-        <p>No trades recorded yet.</p>
+        {loading ? (
+          <p>Loading trade history.</p>
+        ) : (
+          <TradeTable trades={summary?.trades.closed ?? []} emptyText="No trades recorded yet." showExit />
+        )}
       </article>
       <article className="tableSurface">
         <div className="sectionHeader">
           <h2>Open Trades</h2>
-          <span>Paper ledger</span>
+          <span>{summary?.trades.open.length ?? 0} active</span>
         </div>
-        <p>No open trades.</p>
+        <TradeTable trades={summary?.trades.open ?? []} emptyText="No open trades." />
       </article>
+      {error ? <p className="feedbackText">{error}</p> : null}
     </section>
   );
 }
 
-function AccountManagementPage() {
+function AccountManagementPage({
+  summary,
+  loading,
+  error,
+}: {
+  summary: DashboardSummary | null;
+  loading: boolean;
+  error: string;
+}) {
   return (
     <section className="metricGrid" aria-label="Account controls">
       <article>
         <span>Starting Capital</span>
-        <strong>$1,000.00</strong>
-        <small>Paper account baseline</small>
+        <strong>{formatCurrency(summary?.account.initial_cash_usd ?? 1000)}</strong>
+        <small>{loading ? "Loading baseline" : "Paper account baseline"}</small>
       </article>
       <article>
         <span>Current Equity</span>
-        <strong>$1,000.00</strong>
-        <small>Rollover balance</small>
+        <strong>{formatCurrency(summary?.account.equity_usd ?? 1000)}</strong>
+        <small>{loading ? "Loading equity" : "Rollover balance"}</small>
       </article>
       <article>
         <span>Safety lock</span>
-        <strong>Armed</strong>
-        <small>Stops trading at 50% drawdown</small>
+        <strong>{summary?.account.trading_enabled ? "Armed" : "Tripped"}</strong>
+        <small>{summary?.account.safety_lock_reason || "Stops trading at 50% drawdown"}</small>
       </article>
       <article>
         <span>Manual reset</span>
         <strong>Ready</strong>
-        <small>Use CLI when lock trips</small>
+        <small>Run `trader reset-safety` when the lock trips</small>
+      </article>
+      {error ? <p className="feedbackText feedbackTextFull">{error}</p> : null}
+    </section>
+  );
+}
+
+function BacktestsPage({
+  summary,
+  loading,
+  error,
+}: {
+  summary: BacktestsSummary | null;
+  loading: boolean;
+  error: string;
+}) {
+  const runs = summary?.runs ?? [];
+  const runsByPeriod = new Map(runs.map((run) => [run.period_name, run]));
+
+  return (
+    <section className="pageStack">
+      <div className="pageGrid">
+        <article className="tableSurface">
+          <div className="sectionHeader">
+            <h2>Summary</h2>
+            <span>{loading ? "Loading" : `${summary?.total_runs ?? 0} runs`}</span>
+          </div>
+          <p>
+            {error
+              ? error
+              : runs.length
+                ? `Recorded ${runs.length} backtest runs for ${runs[0].strategy_name} ${runs[0].strategy_version}.`
+                : "No backtest runs recorded yet."}
+          </p>
+        </article>
+        <article className="tableSurface">
+          <div className="sectionHeader">
+            <h2>Standard Periods</h2>
+            <span>$1,000 each</span>
+          </div>
+          <ul className="coinList">
+            {backtestPeriods.map((period) => {
+              const run = runsByPeriod.get(period);
+              return (
+                <li key={period}>
+                  <span>{formatPeriodName(period)}</span>
+                  <strong>{run ? `${run.trade_count} trades` : loading ? "Loading" : "Pending"}</strong>
+                </li>
+              );
+            })}
+          </ul>
+        </article>
+      </div>
+      <article className="tableSurface">
+        <div className="sectionHeader">
+          <h2>Recorded Runs</h2>
+          <span>{runs.length ? "Stored in local database" : "Awaiting execution"}</span>
+        </div>
+        {runs.length ? (
+          <div className="tableWrap">
+            <table className="dataTable">
+              <thead>
+                <tr>
+                  <th>Period</th>
+                  <th>Window</th>
+                  <th>Strategy</th>
+                  <th>Trades</th>
+                  <th>Win Rate</th>
+                  <th>Equity</th>
+                  <th>Return</th>
+                  <th>Market</th>
+                </tr>
+              </thead>
+              <tbody>
+                {runs.map((run) => (
+                  <tr key={`${run.period_name}-${run.strategy_name}-${run.strategy_version}`}>
+                    <td>{formatPeriodName(run.period_name)}</td>
+                    <td>
+                      {run.start_date} to {run.end_date}
+                    </td>
+                    <td>
+                      {run.strategy_name} {run.strategy_version}
+                    </td>
+                    <td>{run.trade_count}</td>
+                    <td>{formatPercent(run.win_rate_pct)}</td>
+                    <td>{formatCurrency(run.ending_equity_usd)}</td>
+                    <td>{formatPercent(run.total_return_pct)}</td>
+                    <td>{formatPercent(run.market_return_pct)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <p>No backtest runs recorded yet.</p>
+        )}
+        {runs.length ? <p className="inlineNote">{runs[0].notes}</p> : null}
       </article>
     </section>
   );
 }
 
-function BacktestsPage() {
+function StrategiesPage({
+  strategies,
+  latestRun,
+}: {
+  strategies: StrategiesResponse | null;
+  latestRun: BacktestsSummary["runs"][number] | null;
+}) {
+  if (!strategies?.strategies.length) {
+    return (
+      <section className="pageGrid">
+        <article className="tableSurface">
+          <h2>Loading strategies…</h2>
+        </article>
+      </section>
+    );
+  }
+
   return (
-    <section className="pageGrid">
-      <article className="tableSurface">
-        <div className="sectionHeader">
-          <h2>Summary</h2>
-          <span>0 runs</span>
-        </div>
-        <p>No backtest runs recorded yet.</p>
-      </article>
-      <article className="tableSurface">
-        <div className="sectionHeader">
-          <h2>Standard Periods</h2>
-          <span>$1,000 each</span>
-        </div>
-        <ul className="coinList">
-          {backtestPeriods.map((period) => (
-            <li key={period}><span>{period}</span><strong>Pending</strong></li>
+    <section className="pageStack">
+      {strategies.strategies.map((strategy) => (
+        <StrategyCard key={strategy.name} strategy={strategy} latestRun={latestRun} />
+      ))}
+    </section>
+  );
+}
+
+function StrategyCard({
+  strategy,
+  latestRun,
+}: {
+  strategy: StrategyInfo;
+  latestRun: BacktestsSummary["runs"][number] | null;
+}) {
+  return (
+    <article className="tableSurface">
+      <div className="sectionHeader">
+        <h2>{strategy.title}</h2>
+        <span>
+          {strategy.name} {strategy.version}
+        </span>
+      </div>
+      <p>{strategy.summary}</p>
+      <ul className="ruleList">
+        {strategy.rules.indicators.map((indicator) => (
+          <li key={indicator}>{indicator}</li>
+        ))}
+        <li>
+          <strong>Entry:</strong> {strategy.rules.entry}
+        </li>
+        <li>
+          <strong>Stop loss:</strong> {strategy.rules.stop_loss}
+        </li>
+        <li>
+          <strong>Take profit:</strong> {strategy.rules.take_profit}
+        </li>
+        <li>
+          <strong>Risk:</strong> {strategy.rules.risk}
+        </li>
+      </ul>
+      <div className="chartGrid">
+        {strategy.examples.map((example) => (
+          <figure className="chartCard" key={example.label}>
+            <figcaption>{example.label}</figcaption>
+            <CandleChart example={example} />
+            <div className="chartLegend">
+              <span className="legendEntry">Entry {formatPrice(example.entry)}</span>
+              <span className="legendStop">Stop {formatPrice(example.stop_loss)}</span>
+              <span className="legendTake">Target {formatPrice(example.take_profit)}</span>
+            </div>
+          </figure>
+        ))}
+      </div>
+      {latestRun ? (
+        <p className="inlineNote">
+          Latest backtest ({formatPeriodName(latestRun.period_name)}): {latestRun.notes}
+        </p>
+      ) : null}
+    </article>
+  );
+}
+
+function CandleChart({ example }: { example: StrategyExample }) {
+  const width = 340;
+  const height = 200;
+  const padding = { top: 12, right: 56, bottom: 12, left: 12 };
+  const innerWidth = width - padding.left - padding.right;
+  const innerHeight = height - padding.top - padding.bottom;
+
+  const levels = [example.entry, example.stop_loss, example.take_profit];
+  const highs = example.candles.map((candle) => candle.high);
+  const lows = example.candles.map((candle) => candle.low);
+  const max = Math.max(...highs, ...levels);
+  const min = Math.min(...lows, ...levels);
+  const range = max - min || 1;
+
+  const y = (value: number) => padding.top + (1 - (value - min) / range) * innerHeight;
+  const slot = innerWidth / example.candles.length;
+  const bodyWidth = Math.max(4, slot * 0.55);
+
+  const line = (value: number, className: string, label: string) => (
+    <g key={label}>
+      <line
+        x1={padding.left}
+        x2={padding.left + innerWidth}
+        y1={y(value)}
+        y2={y(value)}
+        className={className}
+        strokeDasharray="4 3"
+      />
+      <text x={padding.left + innerWidth + 4} y={y(value) + 4} className="chartLabel">
+        {label}
+      </text>
+    </g>
+  );
+
+  return (
+    <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label={`${example.label} chart`} className="candleChart">
+      {line(example.take_profit, "lineTake", "TP")}
+      {line(example.entry, "lineEntry", "Entry")}
+      {line(example.stop_loss, "lineStop", "SL")}
+      {example.candles.map((candle, index) => {
+        const center = padding.left + slot * index + slot / 2;
+        const bullish = candle.close >= candle.open;
+        const bodyTop = y(Math.max(candle.open, candle.close));
+        const bodyBottom = y(Math.min(candle.open, candle.close));
+        const isEntry = index === example.entry_index;
+        return (
+          <g key={index} className={bullish ? "candleUp" : "candleDown"}>
+            <line x1={center} x2={center} y1={y(candle.high)} y2={y(candle.low)} className="candleWick" />
+            <rect
+              x={center - bodyWidth / 2}
+              y={bodyTop}
+              width={bodyWidth}
+              height={Math.max(2, bodyBottom - bodyTop)}
+              className={isEntry ? "candleBody candleEntry" : "candleBody"}
+            />
+          </g>
+        );
+      })}
+    </svg>
+  );
+}
+
+function TradeTable({
+  trades,
+  emptyText,
+  showExit = false,
+}: {
+  trades: Trade[];
+  emptyText: string;
+  showExit?: boolean;
+}) {
+  if (!trades.length) {
+    return <p>{emptyText}</p>;
+  }
+  return (
+    <div className="tableWrap">
+      <table className="dataTable">
+        <thead>
+          <tr>
+            <th>Product</th>
+            <th>Strategy</th>
+            <th>Qty</th>
+            <th>Entry</th>
+            <th>Stop</th>
+            <th>Target</th>
+            {showExit ? <th>Exit</th> : null}
+            <th>PnL</th>
+          </tr>
+        </thead>
+        <tbody>
+          {trades.map((trade) => (
+            <tr key={trade.id}>
+              <td>{trade.product_id}</td>
+              <td>{trade.strategy}</td>
+              <td>{trade.quantity.toFixed(6)}</td>
+              <td>{formatPrice(trade.entry_price_usd)}</td>
+              <td>{trade.stop_loss_usd != null ? formatPrice(trade.stop_loss_usd) : "—"}</td>
+              <td>{trade.take_profit_usd != null ? formatPrice(trade.take_profit_usd) : "—"}</td>
+              {showExit ? <td>{trade.exit_price_usd != null ? formatPrice(trade.exit_price_usd) : "—"}</td> : null}
+              <td className={trade.realized_pnl_usd >= 0 ? "pnlUp" : "pnlDown"}>
+                {formatCurrency(trade.realized_pnl_usd)}
+              </td>
+            </tr>
           ))}
-        </ul>
-      </article>
-    </section>
+        </tbody>
+      </table>
+    </div>
   );
 }
 
-function StrategiesPage() {
+function PriceList({ prices }: { prices: PriceRow[] }) {
+  if (!prices.length) {
+    return <p>No coins configured.</p>;
+  }
   return (
-    <section className="pageGrid">
-      <article className="tableSurface">
-        <div className="sectionHeader">
-          <h2>price_action_transcript</h2>
-          <span>Transcript gated</span>
-        </div>
-        <p>Strategy signals stay on hold until the YouTube transcript is reviewed and encoded.</p>
-      </article>
-    </section>
+    <ul className="coinList">
+      {prices.map((row) => (
+        <li key={row.product_id}>
+          <span>{row.product_id}</span>
+          <strong>{row.price_usd != null ? formatCurrency(row.price_usd) : "No data yet"}</strong>
+        </li>
+      ))}
+    </ul>
   );
+}
+
+function formatCurrency(value: number) {
+  return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(value);
+}
+
+function formatPrice(value: number) {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    maximumFractionDigits: 2,
+  }).format(value);
+}
+
+function formatPercent(value: number) {
+  return `${value.toFixed(2)}%`;
+}
+
+function formatPeriodName(period: string) {
+  return period === "last_30_days" ? "Last 30 Days" : period;
 }

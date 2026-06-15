@@ -8,7 +8,7 @@ This project is experimental software. The owner is not a financial professional
 
 ## Current Safety Mode
 
-Version 0.1.3 supports local paper trading first. Coinbase integration is wired for sandbox/public API checks, but live order placement is intentionally blocked.
+Version 0.2.0 supports local paper trading first. Coinbase integration is wired for sandbox/public API checks, but live order placement is intentionally blocked. The bot trades paper money only and stops permanently if equity falls to 50% of the starting balance until you run `trader reset-safety`.
 
 ## Quick Start
 
@@ -48,11 +48,27 @@ The dashboard binds to all local network interfaces and runs on port `8011`. On 
 
 ## Strategies
 
-- `price_action_transcript`: price-action strategy shell gated on transcript review from the requested YouTube video.
+- `ema_ribbon_reversal`: an EMA ribbon reversal price-action strategy encoded from the source YouTube video transcript.
+  - **Orange line** — EMA(200) of close for trend direction.
+  - **Green channel** — EMA(100) of high and EMA(100) of low for the pullback zone.
+  - **White channel** — EMA(5) of high and EMA(5) of low for the end-of-pullback trigger.
+  - **Long:** price and white channel cross above the orange line, price pulls back to touch the green channel, then a candle closes above the white channel. Stop below the green channel; take-profit at 2:1 reward:risk. Short is the mirror image (paper trading is long-only spot, so short signals close open longs).
+
+The Strategies page in the dashboard shows annotated candlestick chart examples for the long and short setups.
 
 ## Backtests
 
-Standard periods are 2024, 2025, 2026, and the last 30 days. Each run starts with 1000 USD paper cash.
+Standard periods are 2024, 2025, 2026, and the last 30 days. Each run starts with 1000 USD paper cash and simulates the strategy bar-by-bar, recording trade count, win rate, ending equity, total return, and max drawdown. Daily market data is downloaded from the Coinbase public API and cached under `data/market/` for reuse.
+
+Run all standard backtests:
+
+```powershell
+trader run-backtests
+```
+
+## Email Notifications
+
+Set `GMAIL_USER`, `GMAIL_APP_PASSWORD`, and `NOTIFY_EMAIL` in `.env` to receive emails (subject prefixed `AI-BOT`) when the bot starts/restarts and when paper trades open or close. If credentials are absent, notifications are silently skipped.
 
 ## Verification
 

@@ -30,3 +30,6 @@ htmlcov/
 
 data/*
 !data/.gitkeep
+# Market data is safe to commit and is reused across runs.
+!data/market/
+!data/market/**

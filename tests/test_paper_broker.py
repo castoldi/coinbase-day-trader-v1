@@ -25,3 +25,17 @@ def test_closing_trade_updates_realized_pnl(tmp_path):
     closed = broker.close_trade(opened.id, exit_price=51000)
     assert closed.status == "closed"
     assert closed.realized_pnl_usd == 10
+
+
+def test_buy_persists_stop_loss_and_take_profit(tmp_path):
+    broker = make_broker(tmp_path)
+    trade = broker.buy(
+        product_id="BTC-USD",
+        quantity=0.01,
+        price=50000,
+        strategy="test",
+        stop_loss=49000,
+        take_profit=52000,
+    )
+    assert trade.stop_loss_usd == 49000
+    assert trade.take_profit_usd == 52000

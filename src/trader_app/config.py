@@ -25,7 +25,7 @@ class Settings(BaseSettings):
     bot_max_drawdown_fraction: float = 0.5
     bot_heartbeat_stale_seconds: int = 1800
     default_products: str = "BTC-USD,ETH-USD,SOL-USD"
-    default_strategies: str = "price_action_transcript"
+    default_strategies: str = "ema_ribbon_reversal"
     coinbase_api_key_name: str = ""
     coinbase_api_private_key: str = ""
     coinbase_sandbox_base_url: str = "https://api.coinbase.com"
@@ -34,6 +34,7 @@ class Settings(BaseSettings):
     gmail_user: str = ""
     gmail_app_password: str = ""
     email_to: str = ""
+    notify_email: str = ""
     api_host: str = "127.0.0.1"
     api_port: int = 8000
     dashboard_host: str = "0.0.0.0"

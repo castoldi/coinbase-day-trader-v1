@@ -8,7 +8,15 @@ class PaperBroker:
     def __init__(self, session_factory: sessionmaker[Session]) -> None:
         self.session_factory = session_factory
 
-    def buy(self, product_id: str, quantity: float, price: float, strategy: str) -> Trade:
+    def buy(
+        self,
+        product_id: str,
+        quantity: float,
+        price: float,
+        strategy: str,
+        stop_loss: float | None = None,
+        take_profit: float | None = None,
+    ) -> Trade:
         with self.session_factory() as session:
             account = session.scalar(select(Account).order_by(Account.id.asc()))
             if account is None:
@@ -27,6 +35,8 @@ class PaperBroker:
                 quantity=quantity,
                 entry_price_usd=price,
                 entry_value_usd=entry_value,
+                stop_loss_usd=stop_loss,
+                take_profit_usd=take_profit,
                 realized_pnl_usd=0,
             )
             session.add(trade)

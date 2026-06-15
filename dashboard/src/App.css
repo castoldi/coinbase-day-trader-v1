@@ -183,9 +183,23 @@ h2 {
   gap: 14px;
 }
 
+.pageStack {
+  display: grid;
+  gap: 14px;
+}
+
 .tableSurface p {
   margin: 22px 0 0;
   color: var(--muted);
+}
+
+.feedbackText {
+  margin: 12px 0 0;
+  color: #8a3f31;
+}
+
+.feedbackTextFull {
+  grid-column: 1 / -1;
 }
 
 .coinList {
@@ -204,6 +218,159 @@ h2 {
 
 .coinList li:last-child {
   border-bottom: 0;
+}
+
+.tableWrap {
+  overflow-x: auto;
+  margin-top: 18px;
+}
+
+.dataTable {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 760px;
+}
+
+.dataTable th,
+.dataTable td {
+  padding: 12px 10px;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+  vertical-align: top;
+}
+
+.dataTable th {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.inlineNote {
+  margin-top: 16px;
+  color: var(--muted);
+}
+
+.pnlUp {
+  color: #1f6b46;
+  font-weight: 700;
+}
+
+.pnlDown {
+  color: #8a3f31;
+  font-weight: 700;
+}
+
+.ruleList {
+  list-style: none;
+  padding: 0;
+  margin: 14px 0 0;
+  display: grid;
+  gap: 8px;
+}
+
+.ruleList li {
+  padding-left: 14px;
+  position: relative;
+  color: var(--ink);
+}
+
+.ruleList li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 8px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--moss);
+}
+
+.chartGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(280px, 1fr));
+  gap: 16px;
+  margin-top: 18px;
+}
+
+.chartCard {
+  margin: 0;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 12px;
+  background: #fdfdfb;
+}
+
+.chartCard figcaption {
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.candleChart {
+  width: 100%;
+  height: auto;
+  background: #ffffff;
+  border-radius: 6px;
+}
+
+.candleWick {
+  stroke: #4a584f;
+  stroke-width: 1;
+}
+
+.candleUp .candleBody {
+  fill: #2f8c5a;
+}
+
+.candleDown .candleBody {
+  fill: #c2532f;
+}
+
+.candleEntry {
+  stroke: #1b1b1b;
+  stroke-width: 1.5;
+}
+
+.lineEntry {
+  stroke: var(--sky);
+}
+
+.lineStop {
+  stroke: #c2532f;
+}
+
+.lineTake {
+  stroke: var(--moss);
+}
+
+.chartLabel {
+  fill: var(--muted);
+  font-size: 10px;
+}
+
+.chartLegend {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+  font-size: 13px;
+}
+
+.legendEntry {
+  color: var(--sky);
+}
+
+.legendStop {
+  color: #c2532f;
+}
+
+.legendTake {
+  color: var(--moss);
+}
+
+@media (max-width: 820px) {
+  .chartGrid {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 820px) {

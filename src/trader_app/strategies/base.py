@@ -19,6 +19,9 @@ class Signal:
     product_id: str | None = None
     confidence: float = 0
     reason: str = ""
+    entry_price: float | None = None
+    stop_loss: float | None = None
+    take_profit: float | None = None
 
 
 class Strategy(Protocol):

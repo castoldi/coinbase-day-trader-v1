@@ -1,14 +1,146 @@
 import React from "react";
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
-import { afterEach, describe, expect, it } from "vitest";
+import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import App from "./App";
 
 afterEach(() => {
   cleanup();
+  vi.restoreAllMocks();
 });
+
+const openTrade = {
+  id: 1,
+  product_id: "BTC-USD",
+  strategy: "ema_ribbon_reversal",
+  status: "open",
+  quantity: 0.01,
+  entry_price_usd: 50000,
+  entry_value_usd: 500,
+  stop_loss_usd: 49000,
+  take_profit_usd: 52000,
+  exit_price_usd: null,
+  realized_pnl_usd: 0,
+  opened_at: "2026-06-10T12:00:00+00:00",
+  closed_at: null,
+};
+
+const closedTrade = {
+  ...openTrade,
+  id: 2,
+  status: "closed",
+  exit_price_usd: 52000,
+  realized_pnl_usd: 20,
+  closed_at: "2026-06-11T12:00:00+00:00",
+};
+
+function summaryPayload() {
+  return {
+    account: {
+      initial_cash_usd: 1000,
+      cash_usd: 520,
+      equity_usd: 1020,
+      realized_pnl_usd: 20,
+      trading_enabled: true,
+      safety_lock_reason: "",
+    },
+    bot: { status: "healthy", strategies: ["ema_ribbon_reversal"] },
+    metrics: { win_rate_pct: 100, closed_count: 1, open_count: 1 },
+    prices: [
+      { product_id: "BTC-USD", price_usd: 65000 },
+      { product_id: "ETH-USD", price_usd: 3500 },
+    ],
+    trades: { open: [openTrade], closed: [closedTrade] },
+  };
+}
+
+function strategiesPayload() {
+  return {
+    strategies: [
+      {
+        name: "ema_ribbon_reversal",
+        version: "1.0.0",
+        title: "EMA Ribbon Reversal",
+        summary: "A reversal strategy.",
+        rules: {
+          indicators: ["Orange line: EMA(200)."],
+          entry: "Close above white channel after pullback.",
+          stop_loss: "Below the green channel.",
+          take_profit: "2:1 reward-to-risk.",
+          risk: "1% rule.",
+        },
+        examples: [
+          {
+            label: "Long reversal setup",
+            side: "long",
+            candles: [
+              { open: 101, high: 108, low: 101, close: 105 },
+              { open: 105, high: 112, low: 104, close: 111 },
+            ],
+            entry: 105,
+            stop_loss: 100,
+            take_profit: 115,
+            entry_index: 0,
+          },
+          {
+            label: "Short reversal setup",
+            side: "short",
+            candles: [
+              { open: 99, high: 99, low: 92, close: 95 },
+              { open: 95, high: 96, low: 88, close: 89 },
+            ],
+            entry: 95,
+            stop_loss: 100,
+            take_profit: 85,
+            entry_index: 0,
+          },
+        ],
+      },
+    ],
+  };
+}
+
+function backtestsPayload() {
+  const run = {
+    id: 1,
+    strategy_name: "ema_ribbon_reversal",
+    strategy_version: "1.0.0",
+    period_name: "2024",
+    product_ids: ["BTC-USD", "ETH-USD", "SOL-USD"],
+    start_date: "2024-01-01",
+    end_date: "2024-12-31",
+    starting_cash_usd: 1000,
+    ending_equity_usd: 1100,
+    total_return_pct: 10,
+    max_drawdown_pct: 5,
+    win_rate_pct: 60,
+    trade_count: 5,
+    market_return_pct: 12.5,
+    notes: "Executed 5 trade(s) with a 60.0% win rate.",
+    created_at: "2026-06-14T20:00:00+00:00",
+  };
+  return { total_runs: 1, periods: ["2024"], runs: [run] };
+}
+
+function mockFetch() {
+  vi.stubGlobal(
+    "fetch",
+    vi.fn((input: string) => {
+      const routes: Record<string, unknown> = {
+        "/api/dashboard/summary": summaryPayload(),
+        "/api/backtests/summary": backtestsPayload(),
+        "/api/strategies": strategiesPayload(),
+      };
+      if (input in routes) {
+        return Promise.resolve({ ok: true, json: async () => routes[input] });
+      }
+      return Promise.reject(new Error(`Unexpected fetch: ${input}`));
+    }),
+  );
+}
 
 describe("App", () => {
   it("renders the live trading dashboard shell", () => {
+    mockFetch();
     render(<App />);
     expect(screen.getByRole("heading", { name: "Live Trading" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Trading History" })).toBeTruthy();
@@ -17,25 +149,38 @@ describe("App", () => {
     expect(screen.getByRole("button", { name: "Strategies" })).toBeTruthy();
   });
 
-  it("changes pages when dashboard menu buttons are clicked", () => {
+  it("shows live prices and open trades", async () => {
+    mockFetch();
     render(<App />);
-    fireEvent.click(screen.getByRole("button", { name: "Trading History" }));
-    expect(screen.getByRole("heading", { name: "Trading History" })).toBeTruthy();
-    expect(screen.getByText("No trades recorded yet.")).toBeTruthy();
+    await waitFor(() => expect(screen.getAllByText("BTC-USD").length).toBeGreaterThan(0));
+    expect(screen.getByText("$65,000.00")).toBeTruthy();
+  });
 
+  it("changes pages when dashboard menu buttons are clicked", () => {
+    mockFetch();
+    render(<App />);
     fireEvent.click(screen.getByRole("button", { name: "Account Management" }));
     expect(screen.getByRole("heading", { name: "Account Management" })).toBeTruthy();
     expect(screen.getByText("Safety lock")).toBeTruthy();
   });
 
-  it("shows standard backtest periods when Backtests is selected", () => {
+  it("shows recorded backtest runs when Backtests is selected", async () => {
+    mockFetch();
     render(<App />);
     fireEvent.click(screen.getByRole("button", { name: "Backtests" }));
     expect(screen.getByRole("heading", { name: "Backtests" })).toBeTruthy();
-    expect(screen.getByText("No backtest runs recorded yet.")).toBeTruthy();
-    expect(screen.getByText("2024")).toBeTruthy();
-    expect(screen.getByText("2025")).toBeTruthy();
-    expect(screen.getByText("2026")).toBeTruthy();
-    expect(screen.getByText("Last 30 days")).toBeTruthy();
+    await waitFor(() =>
+      expect(screen.getByText("Recorded 1 backtest runs for ema_ribbon_reversal 1.0.0.")).toBeTruthy(),
+    );
+    expect(screen.getAllByText("2024").length).toBeGreaterThan(0);
+  });
+
+  it("describes the strategy with chart examples", async () => {
+    mockFetch();
+    render(<App />);
+    fireEvent.click(screen.getByRole("button", { name: "Strategies" }));
+    await waitFor(() => expect(screen.getByText("EMA Ribbon Reversal")).toBeTruthy());
+    expect(screen.getByText("Long reversal setup")).toBeTruthy();
+    expect(screen.getByText("Short reversal setup")).toBeTruthy();
   });
 });

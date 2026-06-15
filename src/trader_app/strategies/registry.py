@@ -1,10 +1,10 @@
 from trader_app.strategies.base import Strategy
-from trader_app.strategies.price_action_transcript import PriceActionTranscriptStrategy
+from trader_app.strategies.ema_ribbon_reversal import EmaRibbonReversalStrategy
 
 
 def available_strategies() -> dict[str, type[Strategy]]:
     return {
-        "price_action_transcript": PriceActionTranscriptStrategy,
+        "ema_ribbon_reversal": EmaRibbonReversalStrategy,
     }
 
 

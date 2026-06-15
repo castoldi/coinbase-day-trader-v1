@@ -27,8 +27,26 @@ const backtestPeriods = ["2024", "2025", "2026", "last_30_days"] as const;
 
 const APP_VERSION = typeof __APP_VERSION__ !== "undefined" ? __APP_VERSION__ : "dev";
 
+const POLL_INTERVAL_MS = 10000;
+
+const pageSlugs: Record<Page, string> = {
+  "Live Trading": "live-trading",
+  "Trading History": "trading-history",
+  "Account Management": "account-management",
+  Backtests: "backtests",
+  Strategies: "strategies",
+};
+const slugToPage = Object.fromEntries(
+  Object.entries(pageSlugs).map(([page, slug]) => [slug, page as Page]),
+) as Record<string, Page>;
+
+function pageFromHash(): Page {
+  const slug = window.location.hash.replace(/^#/, "");
+  return slugToPage[slug] ?? "Live Trading";
+}
+
 export default function App() {
-  const [activePage, setActivePage] = useState<Page>("Live Trading");
+  const [activePage, setActivePage] = useState<Page>(pageFromHash);
   const [dashboardSummary, setDashboardSummary] = useState<DashboardSummary | null>(null);
   const [backtestsSummary, setBacktestsSummary] = useState<BacktestsSummary | null>(null);
   const [strategies, setStrategies] = useState<StrategiesResponse | null>(null);
@@ -64,19 +82,37 @@ export default function App() {
       }
     }
 
-    void load(fetchDashboardSummary, setDashboardSummary, setDashboardError, "Dashboard request failed", () =>
-      setDashboardLoading(false),
-    );
-    void load(fetchBacktestsSummary, setBacktestsSummary, setBacktestsError, "Backtests request failed", () =>
-      setBacktestsLoading(false),
-    );
-    void load(fetchStrategies, setStrategies, () => {}, "Strategies request failed");
+    function loadAll() {
+      void load(fetchDashboardSummary, setDashboardSummary, setDashboardError, "Dashboard request failed", () =>
+        setDashboardLoading(false),
+      );
+      void load(fetchBacktestsSummary, setBacktestsSummary, setBacktestsError, "Backtests request failed", () =>
+        setBacktestsLoading(false),
+      );
+      void load(fetchStrategies, setStrategies, () => {}, "Strategies request failed");
+    }
+
+    // initial fetch + async background polling that updates state in place
+    // (no full-page reload); also refetches immediately on navigation
+    loadAll();
+    const timer = setInterval(loadAll, POLL_INTERVAL_MS);
 
     return () => {
       alive = false;
+      clearInterval(timer);
     };
-    // refetch on every navigation so each tab always shows live data
   }, [activePage]);
+
+  useEffect(() => {
+    const onHashChange = () => setActivePage(pageFromHash());
+    window.addEventListener("hashchange", onHashChange);
+    return () => window.removeEventListener("hashchange", onHashChange);
+  }, []);
+
+  const navigate = (page: Page) => {
+    window.location.hash = pageSlugs[page];
+    setActivePage(page);
+  };
 
   return (
     <main className="appShell">
@@ -91,7 +127,7 @@ export default function App() {
               aria-current={activePage === label ? "page" : undefined}
               className={`navButton${activePage === label ? " navButtonActive" : ""}`}
               key={label}
-              onClick={() => setActivePage(label)}
+              onClick={() => navigate(label)}
               type="button"
               title={label}
             >

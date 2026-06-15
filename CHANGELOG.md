@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.4.3 - 2026-06-15
+
+- The active dashboard page is now kept in the URL hash, so a refresh stays on the same page instead of jumping back to Live Trading.
+- Live data now updates via async background polling (every 10s) and on navigation, refreshing in place without a full-page reload.
+
 ## 0.4.2 - 2026-06-15
 
 - Fixed stale backtest data caused by cached API responses: the API now sends `Cache-Control: no-store`, the dashboard fetches with `cache: "no-store"`, and the dashboard refetches whenever you switch tabs (so each navigation makes a live request).

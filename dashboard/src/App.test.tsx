@@ -6,6 +6,7 @@ import App from "./App";
 afterEach(() => {
   cleanup();
   vi.restoreAllMocks();
+  window.location.hash = "";
 });
 
 const openTrade = {
@@ -175,6 +176,20 @@ describe("App", () => {
     mockFetch();
     render(<App />);
     expect(screen.getByText(/^Build /)).toBeTruthy();
+  });
+
+  it("restores the active page from the URL hash on load", () => {
+    window.location.hash = "#backtests";
+    mockFetch();
+    render(<App />);
+    expect(screen.getByRole("heading", { name: "Backtests" })).toBeTruthy();
+  });
+
+  it("updates the URL hash when navigating so a refresh stays put", () => {
+    mockFetch();
+    render(<App />);
+    fireEvent.click(screen.getByRole("button", { name: "Strategies" }));
+    expect(window.location.hash).toBe("#strategies");
   });
 
   it("shows live prices and open trades", async () => {

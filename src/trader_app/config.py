@@ -36,7 +36,7 @@ class Settings(BaseSettings):
     email_to: str = ""
     api_host: str = "127.0.0.1"
     api_port: int = 8000
-    dashboard_host: str = "127.0.0.1"
+    dashboard_host: str = "0.0.0.0"
     dashboard_port: int = 8011
     email_subject_prefix: str = "AI-BOT"
 

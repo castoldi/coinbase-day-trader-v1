@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.2 - 2026-06-15
+
+- Changed the dashboard development host to `0.0.0.0` so it can be reached from the local network at URLs such as `http://192.168.0.191:8011/`.
+- Added Vite `/api` proxying to the local FastAPI backend.
+- Added tests that lock the dashboard LAN host, port, and proxy behavior.
+
 ## 0.1.1 - 2026-06-15
 
 - Changed the dashboard development port from 5173 to 8011 across settings, `.env.example`, scripts, docs, and dashboard package metadata.

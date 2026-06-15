@@ -8,7 +8,7 @@ This project is experimental software. The owner is not a financial professional
 
 ## Current Safety Mode
 
-Version 0.1.1 supports local paper trading first. Coinbase integration is wired for sandbox/public API checks, but live order placement is intentionally blocked.
+Version 0.1.2 supports local paper trading first. Coinbase integration is wired for sandbox/public API checks, but live order placement is intentionally blocked.
 
 ## Quick Start
 
@@ -22,7 +22,7 @@ Version 0.1.1 supports local paper trading first. Coinbase integration is wired 
 
 Create Coinbase API credentials from Coinbase Developer Platform or Advanced Trade with the least permissions needed for sandbox and market-data testing. Store keys only in `.env` or another ignored local secret file. Do not commit `.env`, `cdp_api_key.json`, or any API key export.
 
-In v0.1.1, `TRADING_MODE=paper` is the safe default. `TRADING_MODE=coinbase_sandbox` is reserved for integration smoke checks. `TRADING_MODE=live` fails closed.
+In v0.1.2, `TRADING_MODE=paper` is the safe default. `TRADING_MODE=coinbase_sandbox` is reserved for integration smoke checks. `TRADING_MODE=live` fails closed.
 
 ## Bot Commands
 
@@ -44,7 +44,7 @@ Run locally:
 powershell -File scripts/start_dashboard.ps1
 ```
 
-The dashboard runs on [http://127.0.0.1:8011](http://127.0.0.1:8011) by default.
+The dashboard binds to all local network interfaces and runs on port `8011`. On this machine, use [http://127.0.0.1:8011](http://127.0.0.1:8011). From another device on the same network, use a LAN URL such as [http://192.168.0.191:8011](http://192.168.0.191:8011).
 
 ## Strategies
 

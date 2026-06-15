@@ -23,3 +23,8 @@ def test_email_subject_prefix_is_constant():
 def test_dashboard_default_port_is_8011():
     settings = Settings(_env_file=None)
     assert settings.dashboard_port == 8011
+
+
+def test_dashboard_default_host_allows_lan_access():
+    settings = Settings(_env_file=None)
+    assert settings.dashboard_host == "0.0.0.0"

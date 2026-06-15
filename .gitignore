@@ -1,6 +1,8 @@
 .env
 .env.*
 !.env.example
+cdp_api_key.json
+*_api_key.json
 
 logs/*
 !logs/.gitkeep
@@ -10,6 +12,7 @@ __pycache__/
 .pytest_cache/
 .venv/
 venv/
+*.egg-info/
 
 node_modules/
 dist/

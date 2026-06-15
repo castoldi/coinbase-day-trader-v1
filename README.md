@@ -18,9 +18,31 @@ Version 0.1.0 supports local paper trading first. Coinbase integration is wired 
 4. Start the bot with `powershell -File scripts/start_bot.ps1 -Strategies ALL`.
 5. Start the dashboard with `powershell -File scripts/start_dashboard.ps1`.
 
+## Coinbase Setup
+
+Create Coinbase API credentials from Coinbase Developer Platform or Advanced Trade with the least permissions needed for sandbox and market-data testing. Store keys only in `.env` or another ignored local secret file. Do not commit `.env`, `cdp_api_key.json`, or any API key export.
+
+In v0.1.0, `TRADING_MODE=paper` is the safe default. `TRADING_MODE=coinbase_sandbox` is reserved for integration smoke checks. `TRADING_MODE=live` fails closed.
+
+## Bot Commands
+
+```powershell
+trader start-bot --strategies ALL
+trader start-bot --strategies price_action_transcript
+trader reset-safety
+```
+
+The bot starts from 1000 USD paper cash. If equity falls to 500 USD or below, trading is disabled until `trader reset-safety` is run manually.
+
 ## Dashboard
 
 Screenshots will be added after the dashboard is implemented and verified.
+
+Run locally:
+
+```powershell
+powershell -File scripts/start_dashboard.ps1
+```
 
 ## Strategies
 
@@ -29,3 +51,18 @@ Screenshots will be added after the dashboard is implemented and verified.
 ## Backtests
 
 Standard periods are 2024, 2025, 2026, and the last 30 days. Each run starts with 1000 USD paper cash.
+
+## Verification
+
+Backend:
+
+```powershell
+pytest -v
+```
+
+Dashboard:
+
+```powershell
+npm --prefix dashboard test -- --run
+npm --prefix dashboard audit --audit-level=moderate
+```

@@ -36,7 +36,7 @@ The bot starts from 1000 USD paper cash. If equity falls to 500 USD or below, tr
 
 ## Dashboard
 
-Screenshots will be added after the dashboard is implemented and verified.
+![Live trading dashboard](screenshots/dashboard-live.png)
 
 Run locally:
 

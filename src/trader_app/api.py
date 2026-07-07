@@ -43,7 +43,7 @@ def create_app(
     account_service = AccountService(session_factory)
     backtest_service = BacktestService(session_factory, settings)
     load_prices = price_loader or _cached_prices
-    app = FastAPI(title="Coinbase Day Trader API", version="0.2.0")
+    app = FastAPI(title="Coinbase Day Trader API", version="0.6.1")
 
     @app.middleware("http")
     async def no_store(request, call_next):

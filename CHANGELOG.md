@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.6.1 - 2026-07-07
+
+- Added agent instructions to never create branches unless explicitly requested and to commit on the default branch.
+- Updated the repository tag format guidance to `vX.Y.Z-yyyyMMdd_HHmmss`.
+- Aligned project, dashboard, API, and package metadata versions to `0.6.1`.
+- Refreshed the dashboard lockfile to resolve the `undici` audit advisory.
+
 ## 0.6.0 - 2026-06-15
 
 - Reworked the Backtests page into a per-coin breakdown matrix: one section per coin, rows = periods, columns = strategies (each cell shows return with trades · win rate), plus a per-coin Buy & Hold column — so you can compare strategies coin-by-coin and period-by-period. Replaced the combined all-coins summary.

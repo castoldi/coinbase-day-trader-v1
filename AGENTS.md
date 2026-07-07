@@ -11,7 +11,9 @@
 
 - Update `VERSION` and `CHANGELOG.md` for meaningful changes.
 - Commit focused changes.
-- Tags use `vX.Y.Z-YYYYMMDD-HHMMSS-CT`.
+- Never create a branch unless the user explicitly asks for one.
+- Always commit on the default branch.
+- Tags use `vX.Y.Z-yyyyMMdd_HHmmss`.
 
 ## Operations
 

@@ -17,6 +17,13 @@
 - **Backtest fee model.** Backtests now apply a configurable per-side trading fee (`BACKTEST_FEE_RATE`, default 0.6%) on both entry and exit, so returns/PnL are net of fees. At intraday frequencies fees dominate, so results are no longer optimistically fee-free.
 - **Configurable candle granularity.** Added `BACKTEST_GRANULARITY` (e.g. `ONE_DAY`, `ONE_HOUR`, `FIVE_MINUTE`, `ONE_MINUTE`). The Coinbase candle loader and cache now work at any granularity (cache files are suffixed per granularity, e.g. `BTC-USD-FIVE_MINUTE.json`), and the simulator iterates every candle in chronological order instead of collapsing to one bar per calendar day — enabling intraday day-trading frequencies (multiple trades per day).
 
+## 0.6.1 - 2026-07-07
+
+- Added agent instructions to never create branches unless explicitly requested and to commit on the default branch.
+- Updated the repository tag format guidance to `vX.Y.Z-yyyyMMdd_HHmmss`.
+- Aligned project, dashboard, API, and package metadata versions to `0.6.1`.
+- Refreshed the dashboard lockfile to resolve the `undici` audit advisory.
+
 ## 0.6.0 - 2026-06-15
 
 - Reworked the Backtests page into a per-coin breakdown matrix: one section per coin, rows = periods, columns = strategies (each cell shows return with trades · win rate), plus a per-coin Buy & Hold column — so you can compare strategies coin-by-coin and period-by-period. Replaced the combined all-coins summary.

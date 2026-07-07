@@ -38,9 +38,11 @@ class Trade(Base):
     quantity: Mapped[float] = mapped_column(Float, nullable=False)
     entry_price_usd: Mapped[float] = mapped_column(Float, nullable=False)
     entry_value_usd: Mapped[float] = mapped_column(Float, nullable=False)
+    entry_fee_usd: Mapped[float | None] = mapped_column(Float, nullable=True)
     stop_loss_usd: Mapped[float | None] = mapped_column(Float, nullable=True)
     take_profit_usd: Mapped[float | None] = mapped_column(Float, nullable=True)
     exit_price_usd: Mapped[float | None] = mapped_column(Float, nullable=True)
+    exit_fee_usd: Mapped[float | None] = mapped_column(Float, nullable=True)
     realized_pnl_usd: Mapped[float] = mapped_column(Float, default=0, nullable=False)
     opened_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
     closed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
@@ -62,6 +64,9 @@ class BacktestRun(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     strategy_name: Mapped[str] = mapped_column(String, nullable=False)
     strategy_version: Mapped[str] = mapped_column(String, nullable=False)
+    # Candle granularity for this run (e.g. ONE_DAY, ONE_HOUR, FIVE_MINUTE).
+    # Nullable so existing local databases can be migrated in place.
+    granularity: Mapped[str | None] = mapped_column(String, nullable=True)
     period_name: Mapped[str] = mapped_column(String, nullable=False)
     product_id: Mapped[str | None] = mapped_column(String, nullable=True)
     product_ids: Mapped[str] = mapped_column(String, nullable=False)

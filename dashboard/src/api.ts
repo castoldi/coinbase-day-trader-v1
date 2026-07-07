@@ -6,9 +6,11 @@ export type Trade = {
   quantity: number;
   entry_price_usd: number;
   entry_value_usd: number;
+  entry_fee_usd: number;
   stop_loss_usd: number | null;
   take_profit_usd: number | null;
   exit_price_usd: number | null;
+  exit_fee_usd: number;
   realized_pnl_usd: number;
   opened_at: string | null;
   closed_at: string | null;
@@ -48,6 +50,7 @@ export type BacktestRunSummary = {
   id: number;
   strategy_name: string;
   strategy_version: string;
+  granularity: string | null;
   period_name: string;
   product_id: string | null;
   product_ids: string[];

@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.8.1 - 2026-07-07
+
+- **Paper trading fees.** Paper-trading entries now reserve the configured per-side trading fee and closes subtract both entry and exit fees from realized PnL, matching the backtest cost model.
+- Added persistent `entry_fee_usd` and `exit_fee_usd` trade fields with SQLite migration support, and exposed them in the dashboard API payload.
+- Clarified that `BACKTEST_FEE_RATE` applies to both backtests and paper trading.
+
+## 0.8.0 - 2026-06-15
+
+- **Multi-timeframe backtests.** The standard sweep now runs across multiple candle granularities side-by-side (`BACKTEST_GRANULARITIES`, default `ONE_DAY,ONE_HOUR,FIVE_MINUTE`), so you can compare how each strategy performs per coin at each timeframe. Added a `granularity` column to backtest runs.
+- **Timeframe-aware periods.** Daily backtests keep calendar-year + last-30-day windows; intraday granularities use shorter rolling windows (e.g. 1-hour → last 90/30/7 days, 5-minute → last 30/7/3 days) to keep candle volume manageable and relevant to day trading.
+- **Backtests page** now groups each coin's matrix by timeframe (Daily / 1-hour / 5-minute …), each with its own period rows × strategy columns, all net of fees.
+
+## 0.7.0 - 2026-06-15
+
+- **Backtest fee model.** Backtests now apply a configurable per-side trading fee (`BACKTEST_FEE_RATE`, default 0.6%) on both entry and exit, so returns/PnL are net of fees. At intraday frequencies fees dominate, so results are no longer optimistically fee-free.
+- **Configurable candle granularity.** Added `BACKTEST_GRANULARITY` (e.g. `ONE_DAY`, `ONE_HOUR`, `FIVE_MINUTE`, `ONE_MINUTE`). The Coinbase candle loader and cache now work at any granularity (cache files are suffixed per granularity, e.g. `BTC-USD-FIVE_MINUTE.json`), and the simulator iterates every candle in chronological order instead of collapsing to one bar per calendar day — enabling intraday day-trading frequencies (multiple trades per day).
+
 ## 0.6.1 - 2026-07-07
 
 - Added agent instructions to never create branches unless explicitly requested and to commit on the default branch.

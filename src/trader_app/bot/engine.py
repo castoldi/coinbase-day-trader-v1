@@ -31,7 +31,7 @@ class TradingEngine:
         self.settings = settings
         self.candle_loader = candle_loader
         self.strategies = strategies
-        self.broker = broker or PaperBroker(session_factory)
+        self.broker = broker or PaperBroker(session_factory, fee_rate=settings.backtest_fee_rate)
         self.notifier = notifier
         self.account_service = AccountService(session_factory)
 
@@ -77,7 +77,8 @@ class TradingEngine:
                         continue
                     spend = min(per_trade, account.cash_usd)
                     if spend > 0 and price > 0:
-                        quantity = spend / price
+                        fee_rate = getattr(self.broker, "fee_rate", 0.0)
+                        quantity = spend / (price * (1 + fee_rate))
                         self.broker.buy(
                             product_id=product_id,
                             quantity=quantity,

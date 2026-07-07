@@ -1,10 +1,11 @@
+import pytest
 from sqlalchemy import select
 
 from trader_app.account import AccountService
 from trader_app.bot.engine import TradingEngine
 from trader_app.config import Settings
 from trader_app.database import create_session_factory, initialize_database
-from trader_app.models import Trade
+from trader_app.models import Account, Trade
 from trader_app.strategies.base import Candle
 from trader_app.strategies.ema_ribbon_reversal import EmaRibbonReversalStrategy
 
@@ -41,11 +42,11 @@ def buy_prefix(strategy: EmaRibbonReversalStrategy) -> list[Candle]:
     raise AssertionError("expected a buy signal in the reversal series")
 
 
-def make_engine(tmp_path, candle_loader, strategies, notifier=None):
+def make_engine(tmp_path, candle_loader, strategies, notifier=None, **settings_overrides):
     db_url = f"sqlite:///{tmp_path / 'engine.sqlite3'}"
     engine, session_factory = create_session_factory(db_url)
     initialize_database(engine)
-    settings = Settings(_env_file=None, default_products="BTC-USD")
+    settings = Settings(_env_file=None, default_products="BTC-USD", **settings_overrides)
     AccountService(session_factory).get_or_create_account(1000, 0.5)
     return session_factory, TradingEngine(
         session_factory, settings, candle_loader=candle_loader, strategies=strategies, notifier=notifier
@@ -65,6 +66,23 @@ def test_buy_signal_opens_paper_trade(tmp_path):
     assert len(trades) == 1
     assert trades[0].stop_loss_usd is not None
     assert trades[0].take_profit_usd is not None
+
+
+def test_buy_signal_sizes_paper_trade_to_include_fees(tmp_path):
+    strategy = small_strategy()
+    prefix = buy_prefix(strategy)
+    session_factory, engine = make_engine(
+        tmp_path, lambda product_id: prefix, [strategy], backtest_fee_rate=0.01
+    )
+
+    engine.run_cycle()
+
+    with session_factory() as session:
+        trade = session.scalars(select(Trade).where(Trade.status == "open")).one()
+        account = session.scalars(select(Account)).one()
+    assert trade.entry_fee_usd == pytest.approx(trade.entry_value_usd * 0.01)
+    assert trade.entry_value_usd + trade.entry_fee_usd == pytest.approx(1000)
+    assert account.cash_usd == pytest.approx(0)
 
 
 def test_take_profit_closes_open_trade(tmp_path):

@@ -22,3 +22,5 @@ def test_initialize_adds_missing_columns_to_existing_table(tmp_path):
     columns = {column["name"] for column in inspect(engine).get_columns("trades")}
     assert "stop_loss_usd" in columns
     assert "take_profit_usd" in columns
+    assert "entry_fee_usd" in columns
+    assert "exit_fee_usd" in columns

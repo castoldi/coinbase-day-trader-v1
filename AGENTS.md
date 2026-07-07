@@ -22,6 +22,7 @@
 - Runtime databases and logs are not committed.
 - `trader start-bot --strategies ALL` ensures the heartbeat and runs one paper-trading cycle; schedule it every ~30 minutes.
 - `trader run-backtests` runs the standard periods; `trader reset-safety` clears the drawdown lock.
+- Backend API listens on port `7011`; the dashboard listens on port `8011` and proxies `/api` to `http://127.0.0.1:7011`.
 
 ## Strategies
 
@@ -64,3 +65,8 @@ The `--strategies` option accepts a single name, a comma-separated list, or `ALL
 - The transcript was retrieved with the `youtube-transcript-api` Python library: `YouTubeTranscriptApi().fetch("HkMXGqz7MRI")`. Use it to re-pull or refine the rules.
 - Strategy signals carry `entry_price`, `stop_loss`, and `take_profit`; the backtest and live engines size positions as `starting_cash / number_of_products` and exit on stop/target or an opposite signal.
 - To add a new strategy, implement the `Strategy` protocol in `src/trader_app/strategies/base.py` and register it in `available_strategies()`; it then becomes selectable via `--strategies <name>`.
+## Process Idempotency
+- Before creating or modifying any startup, scheduler, watchdog, keepalive, dashboard, bot, strategy, or other long-running process script, make it idempotent: repeated manual, scheduled, Startup-folder, Hermes, or agent-monitor invocations must adopt the existing healthy process instead of starting a duplicate.
+- Use a single-instance lock plus a real process identity check such as command line, port owner, and health endpoint; verify PID files against that identity and never rely on a PID file alone.
+- Windows Scheduled Tasks for this project must use `MultipleInstances IgnoreNew`; avoid overlapping scheduled tasks for the same service unless every launch path shares the same guard.
+- When replacing an unhealthy process, kill or adopt only matching project command lines/ports so unrelated processes are not touched and phantom processes are not left behind.

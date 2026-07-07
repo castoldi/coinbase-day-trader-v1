@@ -273,6 +273,19 @@ h2 {
   color: var(--muted);
 }
 
+.granularityBlock {
+  margin-top: 18px;
+}
+
+.granularityHeading {
+  margin: 0 0 8px;
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+
 .pnlUp {
   color: #1f6b46;
   font-weight: 700;

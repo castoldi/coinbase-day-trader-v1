@@ -11,7 +11,9 @@ def make_service(tmp_path, candle_loader, strategies):
     engine, session_factory = create_session_factory(db_url)
     initialize_database(engine)
     settings = Settings(_env_file=None, default_products="BTC-USD")
-    return BacktestService(session_factory, settings, candle_loader=candle_loader, strategies=strategies)
+    return BacktestService(
+        session_factory, settings, candle_loader=candle_loader, strategies=strategies, granularity="ONE_DAY"
+    )
 
 
 def oscillating_points(start: date, cycles: int) -> list[CandlePoint]:

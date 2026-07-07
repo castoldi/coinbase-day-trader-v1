@@ -26,6 +26,17 @@ class Settings(BaseSettings):
     bot_heartbeat_stale_seconds: int = 1800
     default_products: str = "BTC-USD,ETH-USD,SOL-USD"
     default_strategies: str = "ema_ribbon_reversal"
+    # Candle granularity used by the live candle loader. One of the names in
+    # trader_app.backtests.granularity.GRANULARITY_SECONDS.
+    backtest_granularity: str = "ONE_DAY"
+    # Comma-separated granularities the standard backtest sweep compares
+    # side-by-side (coin x granularity x period x strategy).
+    backtest_granularities: str = "ONE_DAY,ONE_HOUR,FIVE_MINUTE"
+    # Per-side trading fee applied on both entry and exit in backtests and
+    # paper trading. Coinbase taker fees are commonly up to 0.6%; tune to your
+    # current fee tier. At intraday frequencies this dominates results, so do
+    # not leave it at zero.
+    backtest_fee_rate: float = 0.006
     coinbase_api_key_name: str = ""
     coinbase_api_private_key: str = ""
     coinbase_sandbox_base_url: str = "https://api.coinbase.com"
@@ -36,7 +47,7 @@ class Settings(BaseSettings):
     email_to: str = ""
     notify_email: str = ""
     api_host: str = "127.0.0.1"
-    api_port: int = 8000
+    api_port: int = 7011
     dashboard_host: str = "0.0.0.0"
     dashboard_port: int = 8011
     email_subject_prefix: str = "AI-BOT"

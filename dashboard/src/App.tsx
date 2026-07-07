@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Activity, BarChart3, BookOpen, History, Landmark } from "lucide-react";
+import { Activity, BarChart3, BookOpen, History, Landmark, RotateCcw } from "lucide-react";
 import { buildCoinBreakdown } from "./breakdown";
 import {
   fetchBacktestsSummary,
@@ -102,6 +102,21 @@ export default function App() {
     };
   }, [activePage]);
 
+  const reloadBacktests = () => {
+    setBacktestsLoading(true);
+    void fetchBacktestsSummary()
+      .then((summary) => {
+        setBacktestsSummary(summary);
+        setBacktestsError("");
+      })
+      .catch((error) => {
+        setBacktestsError(error instanceof Error ? error.message : "Backtests request failed");
+      })
+      .finally(() => {
+        setBacktestsLoading(false);
+      });
+  };
+
   useEffect(() => {
     const onHashChange = () => setActivePage(pageFromHash());
     window.addEventListener("hashchange", onHashChange);
@@ -157,7 +172,12 @@ export default function App() {
           <AccountManagementPage summary={dashboardSummary} loading={dashboardLoading} error={dashboardError} />
         )}
         {activePage === "Backtests" && (
-          <BacktestsPage summary={backtestsSummary} loading={backtestsLoading} error={backtestsError} />
+          <BacktestsPage
+            summary={backtestsSummary}
+            loading={backtestsLoading}
+            error={backtestsError}
+            onRetry={reloadBacktests}
+          />
         )}
         {activePage === "Strategies" && (
           <StrategiesPage strategies={strategies} backtests={backtestsSummary} />
@@ -293,10 +313,12 @@ function BacktestsPage({
   summary,
   loading,
   error,
+  onRetry,
 }: {
   summary: BacktestsSummary | null;
   loading: boolean;
   error: string;
+  onRetry: () => void;
 }) {
   const runs = summary?.runs ?? [];
   const breakdown = buildCoinBreakdown(runs);
@@ -306,21 +328,33 @@ function BacktestsPage({
       <article className="tableSurface">
         <div className="sectionHeader">
           <h2>Summary</h2>
-          <span>{loading ? "Loading" : `${summary?.total_runs ?? 0} runs`}</span>
+          <span className="sectionActions">
+            {loading ? "Loading" : `${summary?.total_runs ?? 0} runs`}
+            <button
+              type="button"
+              className="iconButton"
+              onClick={onRetry}
+              aria-label="Refresh backtests"
+              title="Refresh backtests"
+            >
+              <RotateCcw size={16} />
+            </button>
+          </span>
         </div>
         <p>
           {error
             ? error
             : runs.length
-              ? `${breakdown.coins.length} coins × ${breakdown.periods.length} periods × ${breakdown.strategies.length} strategies. Each cell is that strategy's return on that coin and period.`
+              ? `${breakdown.coins.length} coins × ${breakdown.granularities.length} timeframes × ${breakdown.strategies.length} strategies. Each cell is that strategy's return on that coin, timeframe, and period.`
               : loading
                 ? "Loading backtest runs."
                 : "No backtest runs recorded yet."}
         </p>
         {runs.length ? (
           <p className="inlineNote">
-            Each backtest starts with $1,000 per coin. Cells show return with trades · win rate.
-            "Buy &amp; Hold" is the coin's market move over the window (strategy-independent).
+            Each backtest starts with $1,000 per coin and is net of trading fees. Cells show return
+            with trades · win rate. "Buy &amp; Hold" is the coin's market move over the window
+            (strategy-independent).
           </p>
         ) : null}
       </article>
@@ -342,48 +376,51 @@ function CoinBreakdownSection({
     <article className="tableSurface">
       <div className="sectionHeader">
         <h2>{coin.product_id}</h2>
-        <span>$1,000 per backtest</span>
+        <span>$1,000 per backtest · net of fees</span>
       </div>
-      <div className="tableWrap">
-        <table className="dataTable">
-          <thead>
-            <tr>
-              <th>Period</th>
-              {strategies.map((strategy) => (
-                <th key={strategy.key}>{strategy.name}</th>
-              ))}
-              <th>Buy &amp; Hold</th>
-            </tr>
-          </thead>
-          <tbody>
-            {coin.rows.map((row) => (
-              <tr key={row.period}>
-                <td>{formatPeriodName(row.period)}</td>
-                {strategies.map((strategy) => {
-                  const run = row.cells[strategy.key];
-                  if (!run) {
-                    return (
-                      <td key={strategy.key}>—</td>
-                    );
-                  }
-                  return (
-                    <td key={strategy.key}>
-                      <span className={run.total_return_pct >= 0 ? "pnlUp" : "pnlDown"}>
-                        {formatPercent(run.total_return_pct)}
-                      </span>
-                      <span className="cellSub">
-                        {run.trade_count} {run.trade_count === 1 ? "trade" : "trades"}
-                        {run.trade_count > 0 ? ` · ${Math.round(run.win_rate_pct)}% win` : ""}
-                      </span>
-                    </td>
-                  );
-                })}
-                <td>{formatPercent(row.market_return_pct)}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      {coin.granularities.map((gran) => (
+        <div key={gran.granularity} className="granularityBlock">
+          <h3 className="granularityHeading">{formatGranularity(gran.granularity)}</h3>
+          <div className="tableWrap">
+            <table className="dataTable">
+              <thead>
+                <tr>
+                  <th>Period</th>
+                  {strategies.map((strategy) => (
+                    <th key={strategy.key}>{strategy.name}</th>
+                  ))}
+                  <th>Buy &amp; Hold</th>
+                </tr>
+              </thead>
+              <tbody>
+                {gran.rows.map((row) => (
+                  <tr key={row.period}>
+                    <td>{formatPeriodName(row.period)}</td>
+                    {strategies.map((strategy) => {
+                      const run = row.cells[strategy.key];
+                      if (!run) {
+                        return <td key={strategy.key}>—</td>;
+                      }
+                      return (
+                        <td key={strategy.key}>
+                          <span className={run.total_return_pct >= 0 ? "pnlUp" : "pnlDown"}>
+                            {formatPercent(run.total_return_pct)}
+                          </span>
+                          <span className="cellSub">
+                            {run.trade_count} {run.trade_count === 1 ? "trade" : "trades"}
+                            {run.trade_count > 0 ? ` · ${Math.round(run.win_rate_pct)}% win` : ""}
+                          </span>
+                        </td>
+                      );
+                    })}
+                    <td>{formatPercent(row.market_return_pct)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      ))}
     </article>
   );
 }
@@ -619,5 +656,22 @@ function formatPercent(value: number) {
 }
 
 function formatPeriodName(period: string) {
-  return period === "last_30_days" ? "Last 30 Days" : period;
+  const recent = period.match(/^last_(\d+)_days$/);
+  if (recent) {
+    return `Last ${recent[1]} Days`;
+  }
+  return period;
+}
+
+const GRANULARITY_LABELS: Record<string, string> = {
+  ONE_MINUTE: "1-minute candles",
+  FIVE_MINUTE: "5-minute candles",
+  FIFTEEN_MINUTE: "15-minute candles",
+  ONE_HOUR: "1-hour candles",
+  SIX_HOUR: "6-hour candles",
+  ONE_DAY: "Daily candles",
+};
+
+function formatGranularity(granularity: string) {
+  return GRANULARITY_LABELS[granularity] ?? granularity;
 }

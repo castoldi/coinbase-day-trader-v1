@@ -32,7 +32,7 @@ trader start-bot --strategies price_action_transcript
 trader reset-safety
 ```
 
-The bot starts from 1000 USD paper cash. If equity falls to 500 USD or below, trading is disabled until `trader reset-safety` is run manually.
+The bot starts from 1000 USD paper cash. Paper entries and exits include the simulated per-side trading fee configured by `BACKTEST_FEE_RATE` (default `0.006`, or 0.6%). If equity falls to 500 USD or below, trading is disabled until `trader reset-safety` is run manually.
 
 ## Dashboard
 
@@ -54,7 +54,7 @@ Run locally:
 powershell -File scripts/start_dashboard.ps1
 ```
 
-The dashboard binds to all local network interfaces and runs on port `8011`. On this machine, use [http://127.0.0.1:8011](http://127.0.0.1:8011). From another device on the same network, use a LAN URL such as [http://192.168.0.191:8011](http://192.168.0.191:8011).
+The dashboard binds to all local network interfaces and runs on port `8011`. The backend API listens on port `7011`. On this machine, use [http://127.0.0.1:8011](http://127.0.0.1:8011) for the dashboard and [http://127.0.0.1:7011](http://127.0.0.1:7011) for the API. From another device on the same network, use a LAN URL such as [http://192.168.0.191:8011](http://192.168.0.191:8011).
 
 ## Strategies
 

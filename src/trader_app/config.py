@@ -32,9 +32,10 @@ class Settings(BaseSettings):
     # Comma-separated granularities the standard backtest sweep compares
     # side-by-side (coin x granularity x period x strategy).
     backtest_granularities: str = "ONE_DAY,ONE_HOUR,FIVE_MINUTE"
-    # Per-side trading fee applied on both entry and exit in backtests. Coinbase
-    # retail taker fees are roughly 0.6%; tune to your fee tier. At intraday
-    # frequencies this dominates results, so do not leave it at zero.
+    # Per-side trading fee applied on both entry and exit in backtests and
+    # paper trading. Coinbase taker fees are commonly up to 0.6%; tune to your
+    # current fee tier. At intraday frequencies this dominates results, so do
+    # not leave it at zero.
     backtest_fee_rate: float = 0.006
     coinbase_api_key_name: str = ""
     coinbase_api_private_key: str = ""

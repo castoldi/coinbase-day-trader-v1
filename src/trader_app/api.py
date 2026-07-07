@@ -43,7 +43,7 @@ def create_app(
     account_service = AccountService(session_factory)
     backtest_service = BacktestService(session_factory, settings)
     load_prices = price_loader or _cached_prices
-    app = FastAPI(title="Coinbase Day Trader API", version="0.2.0")
+    app = FastAPI(title="Coinbase Day Trader API", version="0.8.1")
 
     @app.middleware("http")
     async def no_store(request, call_next):
@@ -117,9 +117,11 @@ def _trade_to_dict(trade: Trade) -> dict[str, object]:
         "quantity": trade.quantity,
         "entry_price_usd": trade.entry_price_usd,
         "entry_value_usd": trade.entry_value_usd,
+        "entry_fee_usd": trade.entry_fee_usd or 0.0,
         "stop_loss_usd": trade.stop_loss_usd,
         "take_profit_usd": trade.take_profit_usd,
         "exit_price_usd": trade.exit_price_usd,
+        "exit_fee_usd": trade.exit_fee_usd or 0.0,
         "realized_pnl_usd": trade.realized_pnl_usd,
         "opened_at": trade.opened_at.isoformat() if trade.opened_at else None,
         "closed_at": trade.closed_at.isoformat() if trade.closed_at else None,

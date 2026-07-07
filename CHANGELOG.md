@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.8.1 - 2026-07-07
+
+- **Paper trading fees.** Paper-trading entries now reserve the configured per-side trading fee and closes subtract both entry and exit fees from realized PnL, matching the backtest cost model.
+- Added persistent `entry_fee_usd` and `exit_fee_usd` trade fields with SQLite migration support, and exposed them in the dashboard API payload.
+- Clarified that `BACKTEST_FEE_RATE` applies to both backtests and paper trading.
+
 ## 0.8.0 - 2026-06-15
 
 - **Multi-timeframe backtests.** The standard sweep now runs across multiple candle granularities side-by-side (`BACKTEST_GRANULARITIES`, default `ONE_DAY,ONE_HOUR,FIVE_MINUTE`), so you can compare how each strategy performs per coin at each timeframe. Added a `granularity` column to backtest runs.

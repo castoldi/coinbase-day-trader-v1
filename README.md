@@ -32,7 +32,7 @@ trader start-bot --strategies price_action_transcript
 trader reset-safety
 ```
 
-The bot starts from 1000 USD paper cash. If equity falls to 500 USD or below, trading is disabled until `trader reset-safety` is run manually.
+The bot starts from 1000 USD paper cash. Paper entries and exits include the simulated per-side trading fee configured by `BACKTEST_FEE_RATE` (default `0.006`, or 0.6%). If equity falls to 500 USD or below, trading is disabled until `trader reset-safety` is run manually.
 
 ## Dashboard
 

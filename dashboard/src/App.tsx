@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Activity, BarChart3, BookOpen, History, Landmark } from "lucide-react";
+import { Activity, BarChart3, BookOpen, History, Landmark, RotateCcw } from "lucide-react";
 import { buildCoinBreakdown } from "./breakdown";
 import {
   fetchBacktestsSummary,
@@ -102,6 +102,21 @@ export default function App() {
     };
   }, [activePage]);
 
+  const reloadBacktests = () => {
+    setBacktestsLoading(true);
+    void fetchBacktestsSummary()
+      .then((summary) => {
+        setBacktestsSummary(summary);
+        setBacktestsError("");
+      })
+      .catch((error) => {
+        setBacktestsError(error instanceof Error ? error.message : "Backtests request failed");
+      })
+      .finally(() => {
+        setBacktestsLoading(false);
+      });
+  };
+
   useEffect(() => {
     const onHashChange = () => setActivePage(pageFromHash());
     window.addEventListener("hashchange", onHashChange);
@@ -157,7 +172,12 @@ export default function App() {
           <AccountManagementPage summary={dashboardSummary} loading={dashboardLoading} error={dashboardError} />
         )}
         {activePage === "Backtests" && (
-          <BacktestsPage summary={backtestsSummary} loading={backtestsLoading} error={backtestsError} />
+          <BacktestsPage
+            summary={backtestsSummary}
+            loading={backtestsLoading}
+            error={backtestsError}
+            onRetry={reloadBacktests}
+          />
         )}
         {activePage === "Strategies" && (
           <StrategiesPage strategies={strategies} backtests={backtestsSummary} />
@@ -293,10 +313,12 @@ function BacktestsPage({
   summary,
   loading,
   error,
+  onRetry,
 }: {
   summary: BacktestsSummary | null;
   loading: boolean;
   error: string;
+  onRetry: () => void;
 }) {
   const runs = summary?.runs ?? [];
   const breakdown = buildCoinBreakdown(runs);
@@ -306,7 +328,18 @@ function BacktestsPage({
       <article className="tableSurface">
         <div className="sectionHeader">
           <h2>Summary</h2>
-          <span>{loading ? "Loading" : `${summary?.total_runs ?? 0} runs`}</span>
+          <span className="sectionActions">
+            {loading ? "Loading" : `${summary?.total_runs ?? 0} runs`}
+            <button
+              type="button"
+              className="iconButton"
+              onClick={onRetry}
+              aria-label="Refresh backtests"
+              title="Refresh backtests"
+            >
+              <RotateCcw size={16} />
+            </button>
+          </span>
         </div>
         <p>
           {error

@@ -25,6 +25,11 @@ def test_dashboard_default_port_is_8011():
     assert settings.dashboard_port == 8011
 
 
+def test_api_default_port_is_7011():
+    settings = Settings(_env_file=None)
+    assert settings.api_port == 7011
+
+
 def test_dashboard_default_host_allows_lan_access():
     settings = Settings(_env_file=None)
     assert settings.dashboard_host == "0.0.0.0"
